@@ -4,6 +4,46 @@
 
 ---
 
+## Deploy en Vercel (dos proyectos)
+
+El repo es un monorepo `frontend/` + `api/`. Se deployea como **dos proyectos separados en Vercel**:
+
+### Proyecto 1 — Frontend (Next.js)
+1. En el dashboard de Vercel → **Add New Project** → importar `Bitcoindefi/Passpay`.
+2. Vercel detecta el `vercel.json` en la raíz que apunta a `frontend/` — no hay que cambiar nada.
+3. Agregar variable de entorno:
+   ```
+   NEXT_PUBLIC_API_URL=https://<url-del-proyecto-api>.vercel.app
+   ```
+   (completar después de crear el proyecto API).
+4. Deploy → listo.
+
+### Proyecto 2 — Backend (Express serverless)
+1. En Vercel → **Add New Project** → mismo repo `Bitcoindefi/Passpay`.
+2. **Root Directory**: `api` (cambiar en la config del proyecto).
+3. **Framework Preset**: Other.
+4. **Build Command**: `npm run vercel-build` (corre `prisma generate && tsc`).
+5. **Output Directory**: dejar vacío (Vercel lo maneja con `vercel.json` en `api/`).
+6. Agregar todas las variables de entorno del [api/.env.example](../api/.env.example):
+   ```
+   PASSPAY_SECRET=S...          # clave secreta Stellar (cuenta fondeada)
+   MERCHANT_PUBLIC=G...         # clave pública del comercio
+   PASSPAY_CVU=0000003100...    # CVU recaudador
+   PASSPAY_ALIAS=passpay.pago
+   PASSPAY_MERCHANT_NAME=Passpay Demo
+   PASSPAY_MERCHANT_CITY=Buenos Aires
+   ANCHOR_PROVIDER=reference    # cambiar a "anclap" cuando tengan credenciales
+   T3_SETTLE_ASSET_CODE=XLM
+   ```
+7. Deploy → copiar la URL → pegarla en `NEXT_PUBLIC_API_URL` del proyecto frontend.
+
+### Notas de deploy
+- El backend usa funciones serverless de Vercel (no un servidor persistente) — el plan Hobby alcanza para el hackathon.
+- Prisma en serverless: el schema no tiene base de datos conectada aún, pero `prisma generate` genera el cliente igual para los tipos — no rompe el deploy.
+- CORS: el backend ya tiene `cors()` con `*` — funciona con cualquier dominio de Vercel.
+
+---
+
 ## Estado actual (lo que ya funciona)
 
 | Módulo | Estado | Cómo probarlo |
