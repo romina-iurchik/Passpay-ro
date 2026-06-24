@@ -73,7 +73,7 @@ export default function Home() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <Link href="/pay/demo-123">
+          <Link href="/cobrar-ars">
             <Card className={`h-full border-2 transition-all cursor-pointer overflow-hidden group ${
               isDark
                 ? 'bg-slate-800/50 border-slate-700 hover:border-[#5B4BF5] hover:shadow-xl hover:shadow-[#5B4BF5]/20'
