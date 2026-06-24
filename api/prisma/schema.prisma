@@ -37,3 +37,29 @@ model Payment {
   externalStatus  String   @default("CONFIRMED")
   createdAt       DateTime @default(now())
 }
+
+model T3Transaction {
+  id                  String   @id @default(uuid())
+  amountArs           Float
+  reference           String
+  status              String   @default("ACCREDITED")
+  bankTransactionId   String?
+  coelsaId            String?
+  stellarTxHash       String?
+  settlementAsset     String?
+  settlementAmount    String?
+  payer               String?
+  createdAt           DateTime @default(now())
+}
+
+model AnchorTransaction {
+  id                    String   @id @default(uuid())
+  direction             String   // deposit | withdraw
+  amount                String?
+  anchorTransactionId   String?
+  interactiveUrl        String?
+  status                String   @default("pending")
+  assetCode             String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
