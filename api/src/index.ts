@@ -7,4 +7,7 @@ const app = createApp();
 
 app.listen(PORT, () => {
   console.log(`🚀 Passpay API running on port ${PORT}`);
+  console.log("=== DEBUG DATABASE_URL ===");
+  console.log("DATABASE_URL exists?", !!process.env.DATABASE_URL);
+  console.log("Length:", process.env.DATABASE_URL?.length || 0);
 });
