@@ -29,6 +29,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^4.22.1",
+    "mercadopago": "^3.1.0",
     "prisma": "^5.22.0",
     "qrcode": "^1.5.4",
     "stellar-sdk": "^13.3.0",
