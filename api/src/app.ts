@@ -8,7 +8,8 @@ import transferencias3Router from "./routes/transferencias3.routes";
 import coelsaRouter from "./routes/coelsa.routes";
 import abroadRouter from "./routes/abroad.routes";
 import blindpayRouter from "./routes/blindpay.routes";
-
+import mpRouter from "./routes/mp.routes";
+import webhooksRouter from "./routes/webhooks.routes";
 
 
 
@@ -17,7 +18,6 @@ export function createApp() {
 
   app.use(cors());
   app.use(express.json());
-
   app.use("/health", healthRouter);
   app.use("/splits", splitsRouter);
   app.use("/qr", qrRouter);
@@ -26,6 +26,8 @@ export function createApp() {
   app.use("/webhooks", coelsaRouter);
   app.use("/abroad", abroadRouter);
   app.use("/blindpay", blindpayRouter);
+  app.use("/mp", mpRouter);
+  app.use("/webhooks", webhooksRouter); 
 
   //
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {

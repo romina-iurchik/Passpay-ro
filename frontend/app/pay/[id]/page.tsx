@@ -30,7 +30,28 @@ export default function PaySplitPage({ params }: { params: Promise<{ id: string 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState('USDC');
+  const [mpLoading, setMpLoading] = useState(false);
 
+  const handlePayWithMP = async () => {
+  setMpLoading(true);
+  try {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const res = await fetch(`${API_URL}/mp/preference/${split.id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: shareAmount,
+        description: `Passpay Split - ${split.id}`,
+      }),
+    });
+    const data = await res.json();
+    window.location.href = data.sandbox_init_point;
+  } catch (err: any) {
+    alert('Error al crear preferencia MP: ' + err.message);
+  } finally {
+    setMpLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchSplit(splitId)
@@ -167,7 +188,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
           </Button>
         </motion.div>
 
-        
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <Button
+            onClick={handlePayWithMP}
+            disabled={mpLoading}
+            className="w-full h-16 text-lg font-semibold bg-[#009EE3] hover:bg-[#007EB5] text-white shadow-lg"
+          >
+            💳 {mpLoading ? 'Cargando...' : 'Pagar con MercadoPago'}
+          </Button>
+        </motion.div>
 
         <div className="text-center pt-4">
           <p className="text-xs text-slate-500">Powered by Stellar · Secured by Soroban</p>
