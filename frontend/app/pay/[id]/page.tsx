@@ -5,8 +5,11 @@ import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Wallet, ExternalLink, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { StellarWalletsKit } from "@creit-tech/stellar-wallets-kit/sdk";
+import { defaultModules } from '@creit-tech/stellar-wallets-kit/modules/utils';
+import { SwkAppDarkTheme } from '@creit-tech/stellar-wallets-kit/types';
 
 const CURRENCIES = [
   { code: 'XLM', name: 'Stellar Lumens', icon: '💎', color: 'from-blue-500 to-blue-600' },
@@ -14,48 +17,21 @@ const CURRENCIES = [
   { code: 'ARS', name: 'Pesos Argentinos', icon: '🇦🇷', color: 'from-slate-600 to-slate-700' },
   { code: 'BTC', name: 'Bitcoin', icon: '₿', color: 'from-orange-500 to-orange-600' },
   { code: 'ETH', name: 'Ethereum', icon: 'Ξ', color: 'from-purple-500 to-purple-600' },
+  { code: 'BRL', name: 'Real Brasileño', icon: '🇧🇷', color: 'from-green-500 to-green-600' },
+  { code: 'COP', name: 'Peso Colombiano', icon: '🇨🇴', color: 'from-yellow-500 to-yellow-600' },
 ];
 
-const WALLETS = [
-  { 
-    name: 'Freighter', 
-    icon: '🔷',
-    available: typeof window !== 'undefined' && (window as any).freighter !== undefined,
-    action: 'freighter'
-  },
-  { 
-    name: 'LOBSTR', 
-    icon: '🦞',
-    available: typeof window !== 'undefined' && /Lobstr/i.test(navigator.userAgent),
-    action: 'lobstr'
-  },
-  { 
-    name: 'Albedo', 
-    icon: '🌟',
-    available: typeof window !== 'undefined' && (window as any).albedo !== undefined,
-    action: 'albedo'
-  },
-  { 
-    name: 'xBull', 
-    icon: '🐂',
-    available: typeof window !== 'undefined' && (window as any).xBullSDK !== undefined,
-    action: 'xbull'
-  },
-];
 
 export default function PaySplitPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const splitId = resolvedParams.id;
-
   const router = useRouter();
-
   const [split, setSplit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState('USDC');
-  const [showWalletSelector, setShowWalletSelector] = useState(false);
 
-  // Fetch del split
+
   useEffect(() => {
     fetchSplit(splitId)
       .then(data => {
@@ -68,50 +44,50 @@ export default function PaySplitPage({ params }: { params: Promise<{ id: string 
       });
   }, [splitId]);
 
-  // Manejo de loading y error
   if (loading) return <div className="p-8 text-white">Cargando split...</div>;
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
   if (!split) return null;
 
-  // Cálculo de tu parte
-const searchParams = new URLSearchParams(window.location.search);
-const personas = parseInt(searchParams.get('personas') || '1');
-const shareAmount = split.totalAmount / personas;
-
-
-
-
+  const searchParams = new URLSearchParams(window.location.search);
+  const personas = parseInt(searchParams.get('personas') || '1');
+  const shareAmount = split.totalAmount / personas;
   const baseCurrency = split.settlementAsset.code;
 
-  // Conversión de moneda
   const rates: { [key: string]: number } = {
     'XLM': 11.68,
     'USDC': 1,
     'ARS': 1175,
     'BTC': 0.000015,
     'ETH': 0.00031,
+    'BRL': 5.2,
+    'COP': 4100,
   };
+
   const amountInSelectedCurrency = (shareAmount * rates[selectedCurrency]).toFixed(
     selectedCurrency === 'BTC' || selectedCurrency === 'ETH' ? 6 : 2
   );
 
-const handlePayWithWallet = async (walletAction: string) => {
-    try {
-      const data = await api.payments.register(split.id, {
-        payerId: `user-${walletAction}-${Date.now()}`,
-        method: "STELLAR",
-        originalAsset: selectedCurrency,
-        originalAmount: shareAmount,
-      });
+const handlePayWithWallet = async () => {
+  StellarWalletsKit.init({ 
+  modules: defaultModules(),
+  theme: SwkAppDarkTheme
+});
+  
+  try {
+    const { address } = await StellarWalletsKit.authModal();
+    const data = await api.payments.register(split.id, {
+      payerId: address,
+      method: "STELLAR",
+      originalAsset: selectedCurrency,
+      originalAmount: shareAmount,
+    });
+    router.push(`/pay/${split.id}/success?txHash=${data.stellarTxHash || ''}`);
+  } catch (err: any) {
+    alert('Error al registrar el pago: ' + err.message);
+  }
+};
+  
 
-      // router.push(`/pay/${split.id}/success`); reemplazo por:
-      router.push(`/pay/${split.id}/success?txHash=${data.stellarTxHash || ''}`);
-    } catch (err: any) {
-      alert('Error al registrar el pago: ' + err.message);
-    }
-  };
-
-  const availableWallets = WALLETS.filter(w => w.available);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
@@ -122,7 +98,6 @@ const handlePayWithWallet = async (walletAction: string) => {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-
         <div className="text-center mb-8">
           <Image
             src="/passpay-logo.svg"
@@ -139,9 +114,7 @@ const handlePayWithWallet = async (walletAction: string) => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
           <div className="glass-card p-6 bg-[#5B4BF5]/5 border-[#5B4BF5]/20">
             <p className="text-sm text-slate-400 mb-2">Tu parte:</p>
-            <p className="text-5xl font-bold text-gradient mb-1">
-              {shareAmount.toFixed(2)}
-            </p>
+            <p className="text-5xl font-bold text-gradient mb-1">{shareAmount.toFixed(2)}</p>
             <p className="text-lg text-slate-300">{baseCurrency}</p>
           </div>
         </motion.div>
@@ -150,7 +123,7 @@ const handlePayWithWallet = async (walletAction: string) => {
           <label className="text-sm font-medium text-slate-400 block text-center">
             Elige con qué moneda pagar:
           </label>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-7 gap-2">
             {CURRENCIES.map((currency) => (
               <button
                 key={currency.code}
@@ -170,73 +143,21 @@ const handlePayWithWallet = async (walletAction: string) => {
         {selectedCurrency !== baseCurrency && (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-4 text-center bg-slate-800/30">
             <p className="text-sm text-slate-400 mb-1">Pagarás aproximadamente:</p>
-            <p className="text-3xl font-bold text-[#5B4BF5]">
-              {amountInSelectedCurrency} {selectedCurrency}
-            </p>
+            <p className="text-3xl font-bold text-[#5B4BF5]">{amountInSelectedCurrency} {selectedCurrency}</p>
             <p className="text-xs text-slate-500 mt-2">Tasa de cambio estimada</p>
           </motion.div>
         )}
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <Button
-            onClick={() => setShowWalletSelector(true)}
+            onClick={handlePayWithWallet}
             className="w-full h-16 text-lg font-semibold bg-gradient-to-r from-[#5B4BF5] to-[#3D2FD6] hover:opacity-90 text-white shadow-lg shadow-[#5B4BF5]/20"
           >
             <Wallet className="w-6 h-6 mr-2" /> Pagar con mi Wallet
           </Button>
         </motion.div>
 
-        {showWalletSelector && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4"
-            onClick={() => setShowWalletSelector(false)}
-          >
-            <motion.div
-              initial={{ y: 100 }}
-              animate={{ y: 0 }}
-              className="bg-slate-900 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 border border-slate-700"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-xl font-bold mb-4 text-center">Elige tu wallet</h3>
-
-              <div className="space-y-3 mb-4">
-                {availableWallets.map((wallet) => (
-                  <Button
-                    key={wallet.action}
-                    onClick={() => handlePayWithWallet(wallet.action)}
-                    variant="outline"
-                    className="w-full h-16 justify-between border-2 hover:border-[#5B4BF5] hover:bg-[#5B4BF5]/5"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">{wallet.icon}</span>
-                      <span className="font-semibold text-lg">{wallet.name}</span>
-                    </div>
-                    <ExternalLink className="w-5 h-5 text-slate-400" />
-                  </Button>
-                ))}
-              </div>
-
-              {availableWallets.length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-slate-400 mb-4">No se detectaron wallets instaladas</p>
-                  <Button
-                    onClick={() => window.open('https://www.freighter.app/', '_blank')}
-                    variant="link"
-                    className="text-[#5B4BF5] hover:underline text-sm"
-                  >
-                    Instalar Freighter <ArrowRight className="w-3 h-3 ml-1 inline" />
-                  </Button>
-                </div>
-              )}
-
-              <Button onClick={() => setShowWalletSelector(false)} variant="ghost" className="w-full mt-4">
-                Cancelar
-              </Button>
-            </motion.div>
-          </motion.div>
-        )}
+        
 
         <div className="text-center pt-4">
           <p className="text-xs text-slate-500">Powered by Stellar · Secured by Soroban</p>
