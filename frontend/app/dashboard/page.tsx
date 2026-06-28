@@ -14,7 +14,7 @@ const ARS_PER_USD = 1175;
 type Status = 'liquidado' | 'acreditado' | 'procesando' | 'pendiente';
 
 const STATUS_STYLES: Record<Status, string> = {
-  liquidado: 'bg-[#16E0A3]/15 text-[#16E0A3] border-[#16E0A3]/30',
+  liquidado: 'bg-[#2DD4BF]/15 text-[#2DD4BF] border-[#2DD4BF]/30',
   acreditado: 'bg-[#5B4BF5]/15 text-[#8B7CF8] border-[#5B4BF5]/30',
   procesando: 'bg-[#FFB020]/15 text-[#FFB020] border-[#FFB020]/30',
   pendiente: 'bg-slate-500/15 text-slate-400 border-slate-500/30',
@@ -85,7 +85,7 @@ const MOVIMIENTOS: Movimiento[] = [
 ];
 
 const ACTIONS = [
-  { href: '/cobrar-ars', Icon: QrIcon, label: 'Cobrar en ARS', accent: '#16E0A3' },
+  { href: '/cobrar-ars', Icon: QrIcon, label: 'Cobrar en ARS', accent: '#2DD4BF' },
   { href: '/pos', Icon: BankIcon, label: 'POS / Split', accent: '#5B4BF5' },
   { href: '/offramp', Icon: OffRampIcon, label: 'Off-ramp', accent: '#FFB020' },
   { href: '/ramp', Icon: SwapIcon, label: 'Rampa USD', accent: '#8B7CF8' },
@@ -153,7 +153,7 @@ export default function DashboardPage() {
           )}
 
           <div className="mt-5 flex items-center gap-2 text-[11px] text-white/60">
-            <span className="inline-block h-2 w-2 rounded-full bg-[#16E0A3]" />
+            <span className="inline-block h-2 w-2 rounded-full bg-[#2DD4BF]" />
             Liquidado en Stellar · tasa ≈ {fmtArs(ARS_PER_USD)} ARS/USD
           </div>
         </motion.div>
@@ -203,7 +203,7 @@ export default function DashboardPage() {
                         <p className="truncate text-xs text-slate-400">{m.detail}</p>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className={`text-sm font-bold tabular-nums ${m.amount.startsWith('+') ? 'text-[#16E0A3]' : 'text-white'}`}>{m.amount}</p>
+                        <p className={`text-sm font-bold tabular-nums ${m.amount.startsWith('+') ? 'text-[#2DD4BF]' : 'text-white'}`}>{m.amount}</p>
                         <p className="text-[11px] text-slate-500">{m.time}</p>
                       </div>
                     </div>
@@ -217,7 +217,7 @@ export default function DashboardPage() {
                           href={`https://stellar.expert/explorer/testnet/tx/${m.hash}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex shrink-0 items-center gap-1 text-[11px] text-[#8B7CF8] hover:text-[#16E0A3]"
+                          className="flex shrink-0 items-center gap-1 text-[11px] text-[#8B7CF8] hover:text-[#2DD4BF]"
                         >
                           on-chain <ExternalLink className="h-3 w-3" />
                         </a>
@@ -229,7 +229,7 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          <Link href="/cobrar-ars" className="mt-5 flex items-center justify-center gap-1 rounded-2xl border border-[#16E0A3]/30 bg-[#16E0A3]/10 py-3.5 text-sm font-semibold text-[#16E0A3] transition-all hover:bg-[#16E0A3]/20">
+          <Link href="/cobrar-ars" className="mt-5 flex items-center justify-center gap-1 rounded-2xl border border-[#2DD4BF]/30 bg-[#2DD4BF]/10 py-3.5 text-sm font-semibold text-[#2DD4BF] transition-all hover:bg-[#2DD4BF]/20">
             Nuevo cobro <ChevronRight className="h-4 w-4" />
           </Link>
         </motion.div>

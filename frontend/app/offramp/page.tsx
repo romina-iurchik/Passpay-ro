@@ -195,10 +195,10 @@ export default function OfframpPage() {
             <div key={s} className="flex items-center gap-2">
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all
                 ${step === s ? 'bg-[#5B4BF5] text-white scale-110'
-                  : (['setup', 'quote', 'done'].indexOf(step) > i) ? 'bg-[#16E0A3] text-slate-900' : 'bg-slate-700 text-slate-400'}`}>
+                  : (['setup', 'quote', 'done'].indexOf(step) > i) ? 'bg-[#2DD4BF] text-slate-900' : 'bg-slate-700 text-slate-400'}`}>
                 {(['setup', 'quote', 'done'].indexOf(step) > i) ? '✓' : i + 1}
               </div>
-              {i < 2 && <div className={`w-8 h-0.5 ${(['setup', 'quote', 'done'].indexOf(step) > i) ? 'bg-[#16E0A3]' : 'bg-slate-700'}`} />}
+              {i < 2 && <div className={`w-8 h-0.5 ${(['setup', 'quote', 'done'].indexOf(step) > i) ? 'bg-[#2DD4BF]' : 'bg-slate-700'}`} />}
             </div>
           ))}
         </div>
@@ -231,7 +231,7 @@ export default function OfframpPage() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs text-slate-400">Cuenta ARS de destino</label>
-                  <button onClick={() => setShowNewAccount((v) => !v)} className="text-xs text-[#16E0A3] hover:text-[#5B4BF5] inline-flex items-center gap-1">
+                  <button onClick={() => setShowNewAccount((v) => !v)} className="text-xs text-[#2DD4BF] hover:text-[#5B4BF5] inline-flex items-center gap-1">
                     <Plus className="w-3 h-3" /> Nueva CBU/CVU
                   </button>
                 </div>
@@ -251,7 +251,7 @@ export default function OfframpPage() {
                         className={`w-full text-left p-3 rounded-xl border transition-all flex items-center gap-3 ${bankAccountId === b.id
                           ? 'border-[#5B4BF5] bg-[#5B4BF5]/10' : 'border-slate-600 bg-slate-800/50 hover:border-slate-500'}`}
                       >
-                        <Building2 className="w-4 h-4 text-[#16E0A3] shrink-0" />
+                        <Building2 className="w-4 h-4 text-[#2DD4BF] shrink-0" />
                         <div className="min-w-0">
                           <div className="text-sm font-medium truncate">{b.beneficiary_name}</div>
                           <div className="text-[11px] text-slate-400 font-mono">{b.transfers_type} {b.transfers_account} · {b.status}</div>
@@ -282,7 +282,7 @@ export default function OfframpPage() {
                     <button
                       onClick={handleCreateAccount}
                       disabled={busy === 'create-account'}
-                      className="w-full py-2 rounded-lg bg-[#16E0A3] text-slate-900 font-semibold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="w-full py-2 rounded-lg bg-[#2DD4BF] text-slate-900 font-semibold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                       {busy === 'create-account' ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Crear cuenta ARS'}
                     </button>
@@ -327,7 +327,7 @@ export default function OfframpPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400 text-sm">Recibís</span>
-                  <span className="font-bold text-lg text-[#16E0A3]">{fmt(quote.receiver_amount)} ARS</span>
+                  <span className="font-bold text-lg text-[#2DD4BF]">{fmt(quote.receiver_amount)} ARS</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400 text-sm">Tasa</span>
@@ -369,24 +369,24 @@ export default function OfframpPage() {
           {step === 'done' && receipt && (
             <motion.div key="done" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-5 text-center">
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.1 }}>
-                <CheckCircle className="w-20 h-20 text-[#16E0A3] mx-auto" />
+                <CheckCircle className="w-20 h-20 text-[#2DD4BF] mx-auto" />
               </motion.div>
               <h2 className="text-2xl font-bold">¡Payout iniciado!</h2>
               <p className="text-slate-400 text-sm">BlindPay está procesando la transferencia a la cuenta ARS de destino.</p>
 
-              <div className="bg-slate-800/50 border border-[#16E0A3]/30 rounded-2xl p-5 text-left space-y-3">
+              <div className="bg-slate-800/50 border border-[#2DD4BF]/30 rounded-2xl p-5 text-left space-y-3">
                 <div className="flex justify-between">
                   <span className="text-slate-400 text-sm">Payout ID</span>
                   <span className="font-mono text-xs text-slate-300 truncate max-w-[180px]">{receipt.id}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400 text-sm">Estado</span>
-                  <span className="text-[#16E0A3] font-semibold text-sm capitalize">{receipt.status}</span>
+                  <span className="text-[#2DD4BF] font-semibold text-sm capitalize">{receipt.status}</span>
                 </div>
                 {quote && (
                   <div className="flex justify-between">
                     <span className="text-slate-400 text-sm">Recibirá</span>
-                    <span className="text-[#16E0A3] font-bold">{fmt(quote.receiver_amount)} ARS</span>
+                    <span className="text-[#2DD4BF] font-bold">{fmt(quote.receiver_amount)} ARS</span>
                   </div>
                 )}
                 {walletAddress && (

@@ -81,7 +81,7 @@ export default function RampPage() {
         </Link>
         <div className="text-center mb-6">
           <Image src="/passpay-logo.svg" alt="Passpay" width={200} height={64} priority className="w-auto h-auto max-w-[200px] mx-auto" />
-          <p className="text-sm text-[#16E0A3] font-medium mt-2">Rampa fiat ↔ dólar on-chain</p>
+          <p className="text-sm text-[#2DD4BF] font-medium mt-2">Rampa fiat ↔ dólar on-chain</p>
         </div>
       </div>
 
@@ -106,11 +106,11 @@ export default function RampPage() {
             onClick={() => setDirection('withdraw')}
             className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
               direction === 'withdraw'
-                ? 'border-[#16E0A3] bg-[#16E0A3]/10'
+                ? 'border-[#2DD4BF] bg-[#2DD4BF]/10'
                 : 'border-slate-700 bg-slate-800/40 hover:border-slate-600'
             }`}
           >
-            <ArrowUpFromLine className="w-6 h-6 text-[#16E0A3]" />
+            <ArrowUpFromLine className="w-6 h-6 text-[#2DD4BF]" />
             <span className="font-semibold text-sm">Cobrar en {fiat}</span>
             <span className="text-[11px] text-slate-400">{asset} → {fiat} (off-ramp)</span>
           </button>
@@ -151,7 +151,7 @@ export default function RampPage() {
           className={`w-full h-14 text-lg font-semibold shadow-lg ${
             isDeposit
               ? 'bg-gradient-to-r from-[#5B4BF5] to-[#3D2FD6]'
-              : 'bg-gradient-to-r from-[#16E0A3] to-[#0FB985]'
+              : 'bg-gradient-to-r from-[#2DD4BF] to-[#14B8A6]'
           } hover:opacity-90`}
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : isDeposit ? `Fondear ${asset}` : `Retirar a ${fiat}`}
@@ -168,7 +168,7 @@ export default function RampPage() {
             </div>
             <div className="flex items-center gap-2">
               {status && TERMINAL.has(status) ? (
-                <CheckCircle2 className="w-5 h-5 text-[#16E0A3]" />
+                <CheckCircle2 className="w-5 h-5 text-[#2DD4BF]" />
               ) : (
                 <Loader2 className="w-5 h-5 animate-spin text-[#8B7CF8]" />
               )}

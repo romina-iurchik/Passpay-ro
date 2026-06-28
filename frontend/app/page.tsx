@@ -74,7 +74,7 @@ export default function Home() {
             <span className="text-gradient">Ahorrá en dólares.</span>
           </h1>
           <p className={`mt-3 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-            Simple. Rápido. <span className="text-[#16E0A3] font-medium">En Stellar.</span>
+            Simple. Rápido. <span className="text-[#2DD4BF] font-medium">En Stellar.</span>
           </p>
         </motion.div>
 
@@ -91,12 +91,12 @@ export default function Home() {
               <div
                 className={`group h-full rounded-3xl border p-8 transition-all ${
                   isDark
-                    ? 'border-white/10 bg-white/[0.04] hover:border-[#16E0A3]/60 hover:bg-white/[0.06]'
-                    : 'border-gray-200 bg-white hover:border-[#16E0A3] hover:shadow-xl'
+                    ? 'border-white/10 bg-white/[0.04] hover:border-[#2DD4BF]/60 hover:bg-white/[0.06]'
+                    : 'border-gray-200 bg-white hover:border-[#2DD4BF] hover:shadow-xl'
                 }`}
               >
                 <div
-                  className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#16E0A3] to-[#0FB985] shadow-lg shadow-[#16E0A3]/30"
+                  className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2DD4BF] to-[#14B8A6] shadow-lg shadow-[#2DD4BF]/30"
                 >
                   <ArrowDownToLine className="h-8 w-8 text-white" />
                 </div>
@@ -104,7 +104,7 @@ export default function Home() {
                 <p className={`mt-1 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
                   QR interoperable · Transferencias 3.0
                 </p>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[#16E0A3]">
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[#2DD4BF]">
                   Empezar <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </span>
               </div>

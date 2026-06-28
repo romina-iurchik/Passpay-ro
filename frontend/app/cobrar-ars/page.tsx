@@ -77,7 +77,7 @@ export default function CobrarArsPage() {
 
         <div className="text-center mb-6">
           <Image src="/passpay-logo.svg" alt="Passpay" width={220} height={70} priority className="w-auto h-auto max-w-[220px] mx-auto" />
-          <p className="text-sm text-[#16E0A3] font-medium mt-2 flex items-center justify-center gap-1">
+          <p className="text-sm text-[#2DD4BF] font-medium mt-2 flex items-center justify-center gap-1">
             <Landmark className="w-4 h-4" /> Cobro en ARS · Transferencias 3.0
           </p>
         </div>
@@ -111,7 +111,7 @@ export default function CobrarArsPage() {
                 </div>
               )}
 
-              <Button onClick={handleGenerate} disabled={loading} className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#16E0A3] to-[#0FB985] hover:opacity-90 shadow-lg">
+              <Button onClick={handleGenerate} disabled={loading} className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#2DD4BF] to-[#14B8A6] hover:opacity-90 shadow-lg">
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><QrIcon className="w-5 h-5 mr-2" /> Generar QR interoperable</>}
               </Button>
             </motion.div>
@@ -147,7 +147,7 @@ export default function CobrarArsPage() {
 
           {step === 'done' && receipt && (
             <motion.div key="done" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-8 space-y-5 text-center">
-              <CheckCircle2 className="w-16 h-16 text-[#16E0A3] mx-auto" />
+              <CheckCircle2 className="w-16 h-16 text-[#2DD4BF] mx-auto" />
               <div>
                 <h2 className="text-2xl font-bold">Pago acreditado</h2>
                 <p className="text-slate-400 text-sm mt-1">${receipt.amountArs.toFixed(2)} ARS vía Coelsa</p>
