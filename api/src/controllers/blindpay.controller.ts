@@ -10,6 +10,7 @@ import {
   createBlindPayReceiver,
   initiateBlindPayTos,
 } from "../services/blindpay.service";
+import { prisma } from "../lib/prisma";
 
 // GET /blindpay/customers
 export async function blindPayCustomersController(req: Request, res: Response) {
@@ -63,7 +64,7 @@ export async function blindPayAuthorizeController(req: Request, res: Response) {
 
 // POST /blindpay/payout
 export async function blindPayPayoutController(req: Request, res: Response) {
-  const { quote_id, signed_transaction, sender_wallet_address } = req.body;
+  const { quote_id, signed_transaction, sender_wallet_address, receiver_id, bank_account_id } = req.body;
 
   if (!quote_id || !signed_transaction || !sender_wallet_address) {
     return res.status(400).json({ error: "quote_id, signed_transaction and sender_wallet_address are required" });
@@ -71,6 +72,19 @@ export async function blindPayPayoutController(req: Request, res: Response) {
 
   try {
     const payout = await createBlindPayPayout({ quote_id, signed_transaction, sender_wallet_address });
+
+    // Persistir en Supabase
+    await prisma.blindPayPayout.create({
+      data: {
+        payoutId: payout.id ?? payout.payout_id ?? null,
+        quoteId: quote_id,
+        receiverId: receiver_id ?? null,
+        bankAccountId: bank_account_id ?? null,
+        status: payout.status ?? 'pending',
+        stellarTxHash: signed_transaction ?? null,
+      },
+    });
+
     return res.json(payout);
   } catch (err: any) {
     return res.status(502).json({ error: err.message });
@@ -141,3 +155,5 @@ export async function blindPayTosController(req: Request, res: Response) {
     return res.status(502).json({ error: err.message });
   }
 }
+
+
