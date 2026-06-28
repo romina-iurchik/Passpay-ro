@@ -64,6 +64,16 @@
   }
 }
 
+/* Splash de bienvenida — barra de progreso */
+@keyframes splashbar {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
 .animate-fadeInUp {
   animation: fadeInUp 0.3s ease-out;
 }
