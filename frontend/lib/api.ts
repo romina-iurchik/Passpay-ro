@@ -138,6 +138,57 @@ export const api = {
   },
 };
 
+  // ── BlindPay (off-ramp USDC → ARS/BRL/COP) ──────────────
+  blindpay: {
+    customers: () =>
+      get<{ data: Array<{ id: string; name: string; email: string }> }>(
+        "/blindpay/customers"
+      ),
+
+    bankAccounts: (customerId: string) =>
+      get<{ data: Array<{ id: string; bank_name: string; account_number: string; currency: string }> }>(
+        `/blindpay/customers/${customerId}/bank-accounts`
+      ),
+
+    quote: (body: {
+      amount: number;
+      target_currency: "ARS" | "BRL" | "COP";
+      receiver_id: string;
+      bank_account_id: string;
+    }) =>
+      post<{
+        id: string;
+        source_currency: string;
+        target_currency: string;
+        source_amount: number;
+        target_amount: number;
+        exchange_rate: number;
+        expires_at: string;
+        fee?: number;
+      }>("/blindpay/quote", { ...body, source_currency: "USDC" }),
+
+    authorize: (body: { quote_id: string; sender_wallet_address: string }) =>
+      post<{ xdr: string; transaction_hash?: string; unsigned_xdr?: string }>(
+        "/blindpay/authorize",
+        body
+      ),
+
+    payout: (body: {
+      quote_id: string;
+      signed_transaction: string;
+      sender_wallet_address: string;
+    }) =>
+      post<{
+        id: string;
+        status: string;
+        source_amount: number;
+        target_amount: number;
+        target_currency: string;
+        created_at: string;
+      }>("/blindpay/payout", body),
+  },
+};
+
 // mantener compatibilidad con el fetchSplit que ya usabas
 export async function fetchSplit(id: string) {
   return api.splits.getById(id);

@@ -146,6 +146,12 @@ export default function Home() {
           >
             💵 Rampa fiat ↔ dólar on-chain
           </Link>
+          <Link
+            href="/offramp"
+            className="inline-flex items-center gap-2 text-sm font-medium text-[#FFB020] hover:text-[#16E0A3] transition-colors"
+          >
+            🏦 Off-ramp USDC → ARS/BRL/COP
+          </Link>
         </div>
         <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
           Transferencias 3.0 + Anchor SEP-24 · Liquidación en Stellar
