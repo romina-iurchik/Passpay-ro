@@ -43,5 +43,5 @@
     "skipLibCheck": true,
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist", "src/__tests__"]
+  "exclude": ["src/**/*.bev.ts", "src/__tests__", "node_modules", "dist"]
 }
