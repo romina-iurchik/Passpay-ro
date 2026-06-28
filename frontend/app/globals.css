@@ -11,6 +11,12 @@
   --pp-amber: #FFB020;
 }
 
+/* Fondo base (deep navy) — evita franjas blancas detrás de fondos fixed.
+   Las páginas con tema propio pintan su propio bg encima. */
+body {
+  background-color: #0B0E14;
+}
+
 /* Glass morphism effects */
 .glass-card {
   background-color: rgba(255, 255, 255, 0.8);

@@ -1,17 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from "next/link";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Store, User, Moon, Sun } from "lucide-react";
+import Link from 'next/link';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import { Store, Moon, Sun, ArrowDownToLine, ArrowRightLeft, ChevronRight } from 'lucide-react';
+import { ArrowPatternBg, IconTile, PASSPAY_FEATURES } from '@/components/passpay-graphics';
 
 export default function Home() {
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
-    // Cargar preferencia guardada
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
       setIsDark(savedTheme === 'dark');
@@ -27,136 +26,181 @@ export default function Home() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
-      isDark 
-        ? 'bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900' 
-        : 'bg-gradient-to-b from-gray-50 via-white to-gray-50'
-    } flex flex-col items-center justify-center px-6 py-12`}>
-      
-      {/* Toggle de tema - Arriba a la derecha */}
+    <div
+      className={`relative min-h-screen overflow-hidden px-6 py-10 transition-colors duration-300 ${
+        isDark ? 'bg-[#0B0E14] text-white' : 'bg-gradient-to-b from-gray-50 via-white to-gray-50 text-gray-900'
+      }`}
+    >
+      {/* Fondo de flechas (solo en dark) — cubre toda la altura */}
+      {isDark && <ArrowPatternBg />}
+
+      {/* Toggle de tema */}
       <button
         onClick={toggleTheme}
-        className={`fixed top-6 right-6 p-3 rounded-full transition-all ${
-          isDark 
-            ? 'bg-slate-800 hover:bg-slate-700 text-yellow-400' 
-            : 'bg-white hover:bg-gray-100 text-gray-800 shadow-lg'
+        aria-label="Cambiar tema"
+        className={`fixed top-6 right-6 z-20 rounded-full p-3 transition-all ${
+          isDark ? 'bg-slate-800/70 text-amber-400 hover:bg-slate-700' : 'bg-white text-gray-800 shadow-lg hover:bg-gray-100'
         }`}
       >
-        {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
       </button>
 
-      {/* Logo */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="mb-16"
-      >
-        <Image
-          src="/passpay-logo.svg"
-          alt="Passpay"
-          width={300}
-          height={96}
-          priority
-          className="w-auto h-auto max-w-sm drop-shadow-lg"
-        />
-      </motion.div>
-
-      {/* Cards - Sin títulos, solo iconos */}
-      <div className="w-full max-w-2xl grid md:grid-cols-2 gap-6">
-        
-        {/* Cliente */}
+      <div className="relative z-10 mx-auto flex w-full max-w-2xl flex-col items-center">
+        {/* Logo + tagline */}
         <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="mb-7 mt-6 text-center"
         >
-          <Link href="/cobrar-ars">
-            <Card className={`h-full border-2 transition-all cursor-pointer overflow-hidden group ${
-              isDark
-                ? 'bg-slate-800/50 border-slate-700 hover:border-[#5B4BF5] hover:shadow-xl hover:shadow-[#5B4BF5]/20'
-                : 'bg-white border-gray-200 hover:border-[#5B4BF5] hover:shadow-xl'
-            }`}>
-              <CardContent className="p-12 flex flex-col items-center justify-center h-full">
-                <motion.div
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.5 }}
-                  className="w-24 h-24 bg-gradient-to-br from-[#5B4BF5] to-[#3D2FD6] rounded-3xl flex items-center justify-center mb-6 shadow-lg shadow-[#5B4BF5]/30"
-                >
-                  <User className="w-12 h-12 text-white" />
-                </motion.div>
-                <h3 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Cliente
-                </h3>
-              </CardContent>
-            </Card>
-          </Link>
+          <Image
+            src="/passpay-logo.svg"
+            alt="Passpay"
+            width={260}
+            height={84}
+            priority
+            className="mx-auto h-auto w-auto max-w-[260px] drop-shadow-lg"
+          />
         </motion.div>
 
-        {/* Negocio */}
         <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-10 text-center"
         >
-          <Link href="/pos">
-            <Card className={`h-full border-2 transition-all cursor-pointer overflow-hidden group ${
-              isDark
-                ? 'bg-slate-800/50 border-slate-700 hover:border-[#16E0A3] hover:shadow-xl hover:shadow-[#16E0A3]/20'
-                : 'bg-white border-gray-200 hover:border-[#16E0A3] hover:shadow-xl'
-            }`}>
-              <CardContent className="p-12 flex flex-col items-center justify-center h-full">
-                <motion.div
-                  whileHover={{ rotate: -360 }}
-                  transition={{ duration: 0.5 }}
-                  className="w-24 h-24 bg-gradient-to-br from-[#16E0A3] to-[#0FB985] rounded-3xl flex items-center justify-center mb-6 shadow-lg shadow-[#16E0A3]/30"
-                >
-                  <Store className="w-12 h-12 text-white" />
-                </motion.div>
-                <h3 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Negocio
-                </h3>
-              </CardContent>
-            </Card>
-          </Link>
+          <h1 className="text-3xl font-black leading-tight sm:text-4xl">
+            Cobrá en pesos.{' '}
+            <span className="text-gradient">Ahorrá en dólares.</span>
+          </h1>
+          <p className={`mt-3 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+            Simple. Rápido. <span className="text-[#16E0A3] font-medium">En Stellar.</span>
+          </p>
         </motion.div>
-      </div>
 
-      {/* Footer */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="text-center mt-12"
-      >
-        <div className="flex items-center justify-center gap-5 mb-4 flex-wrap">
-          <Link
-            href="/cobrar-ars"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#16E0A3] hover:text-[#5B4BF5] transition-colors"
+        {/* Cards de entrada */}
+        <div className="grid w-full gap-4 sm:grid-cols-2">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.25 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            🇦🇷 Cobrar en ARS · Transferencias 3.0
+            <Link href="/cobrar-ars" className="block h-full">
+              <div
+                className={`group h-full rounded-3xl border p-8 transition-all ${
+                  isDark
+                    ? 'border-white/10 bg-white/[0.04] hover:border-[#16E0A3]/60 hover:bg-white/[0.06]'
+                    : 'border-gray-200 bg-white hover:border-[#16E0A3] hover:shadow-xl'
+                }`}
+              >
+                <div
+                  className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#16E0A3] to-[#0FB985] shadow-lg shadow-[#16E0A3]/30"
+                >
+                  <ArrowDownToLine className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold">Cobrar en ARS</h3>
+                <p className={`mt-1 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                  QR interoperable · Transferencias 3.0
+                </p>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[#16E0A3]">
+                  Empezar <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </span>
+              </div>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Link href="/pos" className="block h-full">
+              <div
+                className={`group h-full rounded-3xl border p-8 transition-all ${
+                  isDark
+                    ? 'border-white/10 bg-white/[0.04] hover:border-[#5B4BF5]/60 hover:bg-white/[0.06]'
+                    : 'border-gray-200 bg-white hover:border-[#5B4BF5] hover:shadow-xl'
+                }`}
+              >
+                <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#5B4BF5] to-[#3D2FD6] shadow-lg shadow-[#5B4BF5]/30">
+                  <Store className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold">Negocio · POS</h3>
+                <p className={`mt-1 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                  Cobrá y dividí pagos en el punto de venta
+                </p>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[#8B7CF8]">
+                  Abrir POS <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </span>
+              </div>
+            </Link>
+          </motion.div>
+        </div>
+
+        {/* Accesos secundarios */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-4 grid w-full grid-cols-2 gap-4"
+        >
+          <Link
+            href="/offramp"
+            className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
+              isDark ? 'border-white/10 bg-white/[0.03] hover:border-[#FFB020]/50' : 'border-gray-200 bg-white hover:shadow-md'
+            }`}
+          >
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <ArrowRightLeft className="h-4 w-4 text-[#FFB020]" /> Off-ramp a pesos
+            </span>
+            <ChevronRight className="h-4 w-4 text-slate-500" />
           </Link>
           <Link
             href="/ramp"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#8B7CF8] hover:text-[#16E0A3] transition-colors"
+            className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
+              isDark ? 'border-white/10 bg-white/[0.03] hover:border-[#8B7CF8]/50' : 'border-gray-200 bg-white hover:shadow-md'
+            }`}
           >
-            💵 Rampa fiat ↔ dólar on-chain
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <ArrowRightLeft className="h-4 w-4 text-[#8B7CF8]" /> Rampa dólar (SEP-24)
+            </span>
+            <ChevronRight className="h-4 w-4 text-slate-500" />
           </Link>
-          <Link
-            href="/offramp"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#FFB020] hover:text-[#16E0A3] transition-colors"
-          >
-            🏦 Off-ramp USDC → ARS/BRL/COP
-          </Link>
-        </div>
-        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-          Transferencias 3.0 + Anchor SEP-24 · Liquidación en Stellar
-        </p>
-      </motion.div>
+        </motion.div>
+
+        {/* Cómo funciona — set de íconos */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mt-14 w-full"
+        >
+          <p className={`mb-6 text-center text-xs font-semibold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>
+            Cómo funciona
+          </p>
+          <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+            {PASSPAY_FEATURES.map(({ Icon, label }) => (
+              <IconTile key={label} label={label}>
+                <Icon />
+              </IconTile>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Footer */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className={`mt-14 text-center text-xs ${isDark ? 'text-slate-500' : 'text-gray-400'}`}
+        >
+          Transferencias 3.0 (BCRA) + Anchor SEP-24 + BlindPay · liquidación en Stellar
+        </motion.p>
+      </div>
     </div>
   );
 }
