@@ -87,16 +87,20 @@ export default function CobrarArsPage() {
             <motion.div key="input" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="glass-card p-8 space-y-6">
               <div className="space-y-2 text-center">
                 <label className="text-base text-white font-medium block">Monto a cobrar (ARS)</label>
-                <div className="flex items-center justify-center pt-2">
-                  <span className="text-slate-500 text-5xl font-black mr-2">$</span>
+                <div className="flex items-center justify-center pt-2 max-w-full">
+                  <span className="text-slate-500 text-5xl font-black mr-2 shrink-0">$</span>
                   <input
                     type="text"
                     inputMode="decimal"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
                     placeholder="0"
-                    className="bg-transparent border-none outline-none text-7xl font-black text-white text-center inline-block tabular-nums"
-                    style={{ width: `${Math.max(2, (amount || '0').length)}ch` }}
+                    className="bg-transparent border-none outline-none font-black text-white text-center inline-block tabular-nums"
+                    style={{
+                      fontSize: `${Math.min(88, Math.floor(340 / Math.max(1, (amount || '0').length)))}px`,
+                      width: `${Math.max(2, (amount || '0').length)}ch`,
+                      maxWidth: '100%',
+                    }}
                     autoFocus
                   />
                 </div>

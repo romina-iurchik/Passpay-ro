@@ -116,8 +116,8 @@ useEffect(() => {
                   Monto Total
                 </label>
                 <div className="relative">
-                  <div className="text-center pt-4 pb-2">
-                    <span className="text-slate-500 text-6xl font-black mr-2">$</span>
+                  <div className="flex items-center justify-center pt-4 pb-2 max-w-full">
+                    <span className="text-slate-500 text-5xl font-black mr-2 shrink-0">$</span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -127,8 +127,12 @@ useEffect(() => {
                         setAmount(value);
                       }}
                       placeholder="0"
-                      className="bg-transparent border-none outline-none text-9xl font-black text-white text-center inline-block min-w-[200px] tabular-nums"
-                      style={{ width: `${Math.max(3, (amount || '0').length)}ch` }}
+                      className="bg-transparent border-none outline-none font-black text-white text-center inline-block tabular-nums"
+                      style={{
+                        fontSize: `${Math.min(108, Math.floor(360 / Math.max(1, (amount || '0').length)))}px`,
+                        width: `${Math.max(2, (amount || '0').length)}ch`,
+                        maxWidth: '100%',
+                      }}
                       autoFocus
                     />
                   </div>
