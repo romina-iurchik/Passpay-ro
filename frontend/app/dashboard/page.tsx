@@ -8,8 +8,8 @@ import { ArrowLeft, Eye, EyeOff, RefreshCw, ExternalLink, ChevronRight } from 'l
 import { ArrowPatternBg, QrIcon, SwapIcon, OffRampIcon, BankIcon } from '@/components/passpay-graphics';
 import { api } from '@/lib/api';
 
-// Tasa estimada ARS/USD (reemplazable por oráculo/quote en vivo)
-const ARS_PER_USD = 1175;
+// Fallback si el backend no responde; el valor real lo trae el BCRA vía /rates/ars-usd
+const ARS_PER_USD_FALLBACK = 1477;
 
 type Status = 'liquidado' | 'acreditado' | 'procesando' | 'pendiente';
 
@@ -95,13 +95,16 @@ export default function DashboardPage() {
   const [hidden, setHidden] = useState(false);
   const [arsPrimary, setArsPrimary] = useState(false);
   const [merchant, setMerchant] = useState<string>('Mi negocio');
+  const [arsPerUsd, setArsPerUsd] = useState(ARS_PER_USD_FALLBACK);
+  const [rateSource, setRateSource] = useState<'BCRA' | 'fallback'>('BCRA');
 
   // Balance de demo (reemplazable por /merchant/balance contra Horizon)
   const usdc = 1240.5;
-  const ars = usdc * ARS_PER_USD;
+  const ars = usdc * arsPerUsd;
 
   useEffect(() => {
     api.t3.collector().then((c) => c?.name && setMerchant(c.name)).catch(() => {});
+    api.rates.arsUsd().then((r) => { setArsPerUsd(r.arsPerUsd); setRateSource(r.source); }).catch(() => {});
   }, []);
 
   const fmtUsd = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -154,7 +157,7 @@ export default function DashboardPage() {
 
           <div className="mt-5 flex items-center gap-2 text-[11px] text-white/60">
             <span className="inline-block h-2 w-2 rounded-full bg-[#2DD4BF]" />
-            Acreditado al instante · 1 USD ≈ AR$ {fmtArs(ARS_PER_USD)}
+            Acreditado al instante · 1 USD ≈ AR$ {fmtArs(arsPerUsd)} · {rateSource === 'BCRA' ? 'BCRA' : 'ref.'}
           </div>
         </motion.div>
 
