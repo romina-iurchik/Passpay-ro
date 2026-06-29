@@ -21,7 +21,7 @@ const STATUS_STYLES: Record<Status, string> = {
 };
 
 const STATUS_LABEL: Record<Status, string> = {
-  liquidado: 'Liquidado on-chain',
+  liquidado: 'Confirmado',
   acreditado: 'Acreditado',
   procesando: 'Procesando',
   pendiente: 'Pendiente',
@@ -44,9 +44,9 @@ const MOVIMIENTOS: Movimiento[] = [
     id: '1',
     Icon: QrIcon,
     title: 'Cobro en ARS',
-    detail: 'Transferencias 3.0 · Coelsa',
+    detail: 'Cobro con QR · vía Transferencias 3.0',
     amount: '+ $15.000 ARS',
-    sub: '≈ 12,77 USDC liquidados',
+    sub: '≈ 12,77 en dólares',
     status: 'liquidado',
     time: 'hace 2 min',
     hash: 'b3b1a9f2c7',
@@ -55,7 +55,7 @@ const MOVIMIENTOS: Movimiento[] = [
     id: '2',
     Icon: QrIcon,
     title: 'Cobro en ARS',
-    detail: 'Transferencias 3.0 · Coelsa',
+    detail: 'Cobro con QR · vía Transferencias 3.0',
     amount: '+ $8.500 ARS',
     sub: '≈ 7,23 USDC',
     status: 'acreditado',
@@ -65,7 +65,7 @@ const MOVIMIENTOS: Movimiento[] = [
     id: '3',
     Icon: OffRampIcon,
     title: 'Retiro a pesos',
-    detail: 'Off-ramp · BlindPay',
+    detail: 'A tu cuenta · BlindPay',
     amount: '- 50 USDC',
     sub: '≈ $76.300 ARS a tu CBU',
     status: 'procesando',
@@ -75,9 +75,9 @@ const MOVIMIENTOS: Movimiento[] = [
     id: '4',
     Icon: BankIcon,
     title: 'Cobro en ARS',
-    detail: 'Transferencias 3.0 · Coelsa',
+    detail: 'Cobro con QR · vía Transferencias 3.0',
     amount: '+ $42.000 ARS',
-    sub: '≈ 35,74 USDC liquidados',
+    sub: '≈ 35,74 en dólares',
     status: 'liquidado',
     time: 'ayer',
     hash: 'a1c4e88b02',
@@ -87,8 +87,8 @@ const MOVIMIENTOS: Movimiento[] = [
 const ACTIONS = [
   { href: '/cobrar-ars', Icon: QrIcon, label: 'Cobrar en ARS', accent: '#2DD4BF' },
   { href: '/pos', Icon: BankIcon, label: 'POS / Split', accent: '#5B4BF5' },
-  { href: '/offramp', Icon: OffRampIcon, label: 'Off-ramp', accent: '#FFB020' },
-  { href: '/ramp', Icon: SwapIcon, label: 'Rampa USD', accent: '#8B7CF8' },
+  { href: '/offramp', Icon: OffRampIcon, label: 'Pasar a pesos', accent: '#FFB020' },
+  { href: '/ramp', Icon: SwapIcon, label: 'Comprar USD', accent: '#8B7CF8' },
 ];
 
 export default function DashboardPage() {
@@ -143,7 +143,7 @@ export default function DashboardPage() {
           {arsPrimary ? (
             <>
               <p className="mt-3 text-4xl font-black tabular-nums">{mask(`$${fmtArs(ars)}`)}</p>
-              <p className="mt-1 text-sm text-white/70">≈ {mask(`${fmtUsd(usdc)} USDC`)} on-chain</p>
+              <p className="mt-1 text-sm text-white/70">≈ {mask(`${fmtUsd(usdc)} en dólares`)}</p>
             </>
           ) : (
             <>
@@ -154,7 +154,7 @@ export default function DashboardPage() {
 
           <div className="mt-5 flex items-center gap-2 text-[11px] text-white/60">
             <span className="inline-block h-2 w-2 rounded-full bg-[#2DD4BF]" />
-            Liquidado en Stellar · tasa ≈ {fmtArs(ARS_PER_USD)} ARS/USD
+            Acreditado al instante · 1 USD ≈ AR$ {fmtArs(ARS_PER_USD)}
           </div>
         </motion.div>
 
@@ -219,7 +219,7 @@ export default function DashboardPage() {
                           rel="noopener noreferrer"
                           className="flex shrink-0 items-center gap-1 text-[11px] text-[#8B7CF8] hover:text-[#2DD4BF]"
                         >
-                          on-chain <ExternalLink className="h-3 w-3" />
+                          Ver comprobante <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
                     </div>
@@ -235,7 +235,7 @@ export default function DashboardPage() {
         </motion.div>
 
         <p className="mt-8 text-center text-[11px] text-slate-600">
-          Transferencias 3.0 + Anchor SEP-24 + BlindPay · liquidación en Stellar
+          Cobrás en pesos, ahorrás en dólares · Tecnología Transferencias 3.0 y Stellar
         </p>
       </div>
     </div>

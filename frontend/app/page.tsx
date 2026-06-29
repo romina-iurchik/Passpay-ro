@@ -102,7 +102,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl font-bold">Cobrar en ARS</h3>
                 <p className={`mt-1 text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                  QR interoperable · Transferencias 3.0
+                  Pago con QR · cualquier billetera o banco
                 </p>
                 <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[#2DD4BF]">
                   Empezar <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -155,7 +155,7 @@ export default function Home() {
             }`}
           >
             <span className="flex items-center gap-2 text-sm font-medium">
-              <ArrowRightLeft className="h-4 w-4 text-[#FFB020]" /> Off-ramp a pesos
+              <ArrowRightLeft className="h-4 w-4 text-[#FFB020]" /> Pasar mis dólares a pesos
             </span>
             <ChevronRight className="h-4 w-4 text-slate-500" />
           </Link>
@@ -166,7 +166,7 @@ export default function Home() {
             }`}
           >
             <span className="flex items-center gap-2 text-sm font-medium">
-              <ArrowRightLeft className="h-4 w-4 text-[#8B7CF8]" /> Rampa dólar (SEP-24)
+              <ArrowRightLeft className="h-4 w-4 text-[#8B7CF8]" /> Comprar o vender dólares
             </span>
             <ChevronRight className="h-4 w-4 text-slate-500" />
           </Link>
@@ -198,7 +198,7 @@ export default function Home() {
           transition={{ delay: 0.6 }}
           className={`mt-14 text-center text-xs ${isDark ? 'text-slate-500' : 'text-gray-400'}`}
         >
-          Transferencias 3.0 (BCRA) + Anchor SEP-24 + BlindPay · liquidación en Stellar
+          Cobrá en pesos y guardá el valor en dólares · Tecnología Transferencias 3.0 (BCRA) y Stellar
         </motion.p>
       </div>
     </div>
