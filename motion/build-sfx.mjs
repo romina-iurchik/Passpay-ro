@@ -41,10 +41,15 @@ const SLIDE = [
 for (const e of SLIDE) place(e.src === "chime" ? chime : pop, e.f / 30, e.src === "chime" ? 0.85 : 1.0);
 
 // SFX del demo: pop por acción, chime en hitos. Demo arranca en frame 420 = 14s.
+// Corrección de drift: el tiempo de las marcas (wall-clock) no mapea 1:1 al video de
+// Playwright, así que escalamos linealmente las marcas a la duración real del demo.
 const marks = JSON.parse(readFileSync("src/marks.json", "utf8"));
-const SUCCESS = ["Acreditado", "Quote real", "SEP-24 — flujo hosted", "QR del split listo", "QR interoperable"];
+const DEMO_DUR = parseFloat(process.argv[2] || "80.64"); // segundos reales de public/demo.mp4
+const lastT = Math.max(...marks.map((m) => m.t)) / 1000;
+const scale = lastT > 0 ? DEMO_DUR / lastT : 1;
+const SUCCESS = ["Acreditado", "Quote real", "SEP-24 — formulario", "QR del split listo", "QR interoperable"];
 for (const m of marks) {
-  const t = 14 + m.t / 1000;
+  const t = 14 + (m.t / 1000) * scale;
   const success = SUCCESS.some((s) => m.title.includes(s));
   place(success ? chime : pop, t, success ? 0.85 : 1.0);
 }

@@ -16,15 +16,28 @@ async function hideDevOverlay(page) {
   }).catch(() => {});
 }
 
-// Grabación LIMPIA: cap() ya no dibuja banner; registra una marca de tiempo (ms desde T0)
-// para que Remotion sincronice los subtítulos sobre el marco de teléfono.
+// cap() dibuja un banner sincronizado (horneado en el video) Y registra una marca
+// de tiempo (para colocar los SFX en post). Banner = sync perfecto con el contenido.
 const MARKS = [];
 let T0 = 0;
 async function cap(page, title, sub = "") {
   await hideDevOverlay(page);
   MARKS.push({ t: Math.max(0, Date.now() - T0), title, sub });
+  await page.evaluate(({ title, sub }) => {
+    let el = document.getElementById("pp-cap");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "pp-cap";
+      el.style.cssText =
+        "position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,#5B4BF5,#2DD4BF);color:#fff;font:600 15px/1.35 system-ui,sans-serif;padding:10px 16px;text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.45)";
+      document.body.appendChild(el);
+    }
+    el.innerHTML = title + (sub ? `<div style="font-weight:400;font-size:12px;opacity:.92;margin-top:3px">${sub}</div>` : "");
+  }, { title, sub }).catch(() => {});
 }
-async function clearCap() {}
+async function clearCap(page) {
+  await page.evaluate(() => document.getElementById("pp-cap")?.remove()).catch(() => {});
+}
 
 async function safeClickByText(page, text) {
   const btn = page.getByRole("button", { name: text });
@@ -185,24 +198,52 @@ async function scrollTo(page, y) {
       await rampAmount.first().fill("10");
       await sleep(page, 1100);
     }
-    await cap(page, "4 · Se abre el flujo SEP-24 del anchor", "Ventana hosted del anchor (KYC + transferencia) · estado en vivo");
-    // Disparar el retiro: se abre el popup del anchor; lo cerramos y mostramos el
-    // estado de la operación en la propia pantalla de Passpay (la UI de referencia
-    // del testanchor es inestable, no la mostramos en el demo).
+    await cap(page, "4 · Se abre el flujo SEP-24 del anchor", "Al retirar, el anchor abre su ventana hosted (KYC + transferencia)");
+    // Disparar el retiro: el anchor abre el flujo en un popup → capturamos su URL
+    let sep24Url = null;
     try {
       const [popup] = await Promise.all([
         page.waitForEvent("popup", { timeout: 18000 }),
         page.getByRole("button", { name: /Retirar/i }).first().click(),
       ]);
-      await popup.waitForTimeout(700);
+      await popup.waitForLoadState("domcontentloaded").catch(() => {});
+      await popup.waitForTimeout(800);
+      sep24Url = popup.url();
       await popup.close().catch(() => {});
-    } catch {
-      await page.getByRole("button", { name: /Retirar/i }).first().click().catch(() => {});
-    }
+    } catch {}
+    // mostrar el estado de la operación en la pantalla de Passpay
     await page.getByText(/Operaci[oó]n|pending|transfer/i).first().waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
-    await sleep(page, 4500);
-    await cap(page, "4 · Rampa SEP-24 lista", "On/off-ramp dólar ↔ peso con un anchor real de Stellar");
-    await sleep(page, 2500);
+    await sleep(page, 2800);
+    // mostrar el FORMULARIO de retiro SEP-24. Pedimos una operación FRESCA (estado nuevo →
+    // muestra el formulario AMOUNT/NAME/…, no la pantalla de info con guiones) y esperamos
+    // a que aparezcan los campos. Reintentos por si el anchor de testnet glitchea.
+    let shownForm = false;
+    for (let attempt = 0; attempt < 3 && !shownForm; attempt++) {
+      const freshUrl = await page.evaluate(async () => {
+        try {
+          const r = await fetch("https://passpay-api.vercel.app/anchor/ramp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ direction: "withdraw", amount: "10" }),
+          });
+          const d = await r.json();
+          return d.interactiveUrl || null;
+        } catch {
+          return null;
+        }
+      });
+      if (!freshUrl) continue;
+      await page.goto(freshUrl, { waitUntil: "domcontentloaded" }).catch(() => {});
+      shownForm = await page.getByText(/first name/i).first().waitFor({ state: "visible", timeout: 9000 }).then(() => true).catch(() => false);
+    }
+    if (shownForm) {
+      await sleep(page, 1000);
+      await cap(page, "4 · SEP-24 — formulario de retiro del anchor (Stellar)", "El usuario completa monto y datos para recibir en su cuenta");
+      await sleep(page, 4500);
+    } else {
+      await cap(page, "4 · Rampa SEP-24 lista", "On/off-ramp dólar ↔ peso con un anchor real de Stellar");
+      await sleep(page, 2500);
+    }
 
     // ───────── cierre ─────────
     await page.goto(BASE + "/", { waitUntil: "networkidle" });
