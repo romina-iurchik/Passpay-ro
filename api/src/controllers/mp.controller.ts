@@ -1,5 +1,7 @@
+
 import { Request, Response } from "express";
 import { createMPPreference, getMPPayment } from "../services/mp.service";
+import { registerPaymentService } from "../services/payment.service";
 
 // POST /mp/preference/:splitId — crea preferencia y devuelve init_point
 export async function createMPPreferenceController(req: Request, res: Response) {
@@ -33,11 +35,33 @@ export async function mpWebhookController(req: Request, res: Response) {
   const splitId = req.params.splitId as string;
   const { type, data } = req.body;
 
-  if (type === 'payment' && data?.id) {
+    if (type === 'payment' && data?.id) {
     try {
       const payment = await getMPPayment(String(data.id));
       console.log(`[MP] Pago ${data.id} para split ${splitId}: ${payment.status}`);
-      // TODO: si payment.status === 'approved' → registrar pago en el split
+
+      if (payment.status === 'approved') {
+        const payerId = payment.payer?.email || payment.payer?.id?.toString() || `mp_${data.id}`;
+        const originalAmount = payment.transaction_amount;
+
+        if (!originalAmount) {
+          console.error(`[MP] Pago ${data.id} aprobado pero sin transaction_amount`);
+          return res.sendStatus(200);
+        }
+
+        try {
+          await registerPaymentService(
+            splitId,
+            payerId,
+            "MERCADO_PAGO",
+            "ARS",
+            originalAmount
+          );
+          console.log(`[MP] Pago ${data.id} registrado en split ${splitId}`);
+        } catch (regErr: any) {
+          console.error(`[MP] Error registrando pago en split: ${regErr.message}`);
+        }
+      }
     } catch (err: any) {
       console.error(`[MP] Error procesando webhook: ${err.message}`);
     }
