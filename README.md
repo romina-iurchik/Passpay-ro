@@ -1,57 +1,84 @@
 # Passpay
 
-**Cobrá en cualquier moneda. Liquidá en dólares on-chain.**
+**Cobrá en pesos. Ahorrá en dólares. — sobre Stellar.**
 
-Passpay es la capa de orquestación de pagos que conecta **Transferencias 3.0** (el esquema de pagos interoperables del Banco Central de Argentina) con **Stellar**: un comercio cobra en pesos con un QR interoperable, y el valor se liquida instantáneamente on-chain en dólares (USDC) o XLM, con on/off-ramp a través de un **anchor SEP-24**.
+Passpay es una capa de orquestación de pagos para Argentina que conecta el rail bancario local — **Transferencias 3.0** (el esquema de pagos interoperables del Banco Central) — con **Stellar**. Un comercio cobra en pesos con un QR interoperable, y el valor se **liquida on-chain en dólares** (USDC/XLM) en segundos. Cuando quiere, retira esos dólares de vuelta a pesos en su cuenta bancaria.
 
-> Construido para el track de Integración de Stellar / PULSO Argentina.
+> Construido para el track de Integración de Stellar / PULSO Argentina (Pitch Day Buenos Aires).
 
-> 🧭 **¿Nuevo en el repo?** Leé [docs/FLUJOS.md](docs/FLUJOS.md) — explica los 4 flujos paso a paso (de lo conceptual a lo técnico). Demo en video: [docs/demo/passpay-flows.webm](docs/demo/passpay-flows.webm).
+### 🔗 Demo en vivo
+
+| | |
+|---|---|
+| 🌐 **App** | **https://passpay-one.vercel.app** |
+| ⚙️ **API** | **https://passpay-api.vercel.app** (`/health`, `/transferencias3/collector`, `/anchor/info`…) |
+| 🎥 **Video** | [docs/demo/passpay-flows.webm](docs/demo/passpay-flows.webm) — recorrido de los 4 flujos |
+| 🧭 **¿Nuevo en el repo?** | [docs/FLUJOS.md](docs/FLUJOS.md) — los flujos explicados paso a paso |
 
 ---
 
 ## El problema
 
-Argentina vive dos realidades simultáneas:
+Argentina vive dos realidades a la vez:
 
 1. **Transferencias 3.0** está redefiniendo los pagos locales: QR interoperable, instantáneo, 24/7, entre cualquier billetera y banco.
-2. La demanda de **dólar digital** es de las más altas de la región — pero mover pesos a dólares on-chain es fricción pura.
+2. La demanda de **dólar digital** es de las más altas de la región — pero pasar pesos a dólares on-chain (y de vuelta) es fricción pura.
 
-No existe una capa que una ambos mundos: cobrar en pesos por el rail local y **settlear en dólares on-chain** sin que el comercio tenga que entender de cripto.
+No existe una capa que una ambos mundos: **cobrar en pesos por el rail de siempre y que el valor quede en dólares on-chain**, sin que el comercio tenga que entender de cripto.
 
 ## La solución
 
-Passpay es esa capa. El comercio configura su **moneda de liquidación** (USDC/XLM) una vez. A partir de ahí:
+Passpay es esa capa. El comercio configura su moneda de liquidación (USDC/XLM) una vez, y a partir de ahí:
 
 ```
-Cliente paga en ARS (Transferencias 3.0)        Cliente paga con wallet Stellar
-        │                                                │
-        ▼                                                ▼
-   QR interoperable EMVCo  ───────►  PASSPAY  ◄───────  QR SEP-7
-   (CVU + Coelsa)                       │              (XLM/USDC)
-                                        ▼
-                         Conversión + liquidación on-chain
-                                        │
-                                        ▼
-                   El comercio recibe SIEMPRE su moneda configurada
-                   (USDC/XLM en Stellar)  ·  off-ramp a ARS vía anchor SEP-24
+   PESOS (rail bancario AR)                         DÓLAR (on-chain · Stellar)
+ ┌──────────────────────────┐                    ┌────────────────────────────┐
+ │ Cliente paga por QR       │                    │ El comercio recibe USDC/XLM │
+ │ Transferencias 3.0 (CVU)  │ ───►  PASSPAY  ───►│ liquidado en Stellar        │
+ │  · o wallet Stellar (SEP-7)│      (orquesta +   │  (en segundos)              │
+ └──────────────────────────┘       liquida)      └─────────────┬──────────────┘
+                                                                 │ cuando quiere
+                                                                 ▼
+                                                   ┌────────────────────────────┐
+                                                   │ Off-ramp: USDC → ARS a un   │
+                                                   │ CBU/CVU (BlindPay) o anchor │
+                                                   │ SEP-24                       │
+                                                   └────────────────────────────┘
 ```
 
 ---
 
-## Cómo toca Stellar (load-bearing)
+## 🌟 Integración con Stellar (load-bearing)
 
-Las integraciones con Stellar **son** el producto, no un adorno:
+**Sin Stellar no hay producto.** Stellar no aparece "en una slide": es el motor de cómo se mueve y se guarda el valor. Cada integración abajo es real y, si la sacás, un flujo deja de funcionar.
 
-| Integración | Estándar | Qué hace | Dónde |
+| Integración Stellar | Estándar / API | Qué hace (y qué se rompe sin esto) | Código |
 |---|---|---|---|
-| **On/off-ramp dólar ↔ ARS** | **SEP-1 / SEP-10 / SEP-24** | Autenticación web + depósito/retiro interactivo contra un anchor real (Anclap en producción, anchor de referencia de la SDF en testnet). Descubre endpoints dinámicamente vía `stellar.toml`. | [`anchor.service.ts`](api/src/services/anchor.service.ts) |
-| **Liquidación on-chain** | **Path Payment (Horizon)** | Settlement real en Stellar: `pathPaymentStrictReceive` para entregar al comercio exactamente su moneda configurada usando el DEX. | [`stellar.service.ts`](api/src/services/stellar.service.ts) |
-| **Cobro local → on-chain** | **Transferencias 3.0 (BCRA) + EMVCo** | QR interoperable real (TLV + CRC16-CCITT), CVU recaudador, acreditación Coelsa, y liquidación on-chain del valor cobrado. | [`transferencias3.service.ts`](api/src/services/transferencias3.service.ts) |
-| **Tasas de cambio** | **Horizon `/paths`** | Tasa real desde el DEX de Stellar para la conversión entre activos. | [`conversion.service.ts`](api/src/services/conversion.service.ts) |
-| **QR de pago wallet** | **SEP-7** | URI `web+stellar:pay` interoperable para wallets. | [`qr.service.ts`](api/src/services/qr.service.ts) |
+| **Liquidación on-chain del cobro** | **Horizon · `payment` + `pathPaymentStrictReceive`** | Cada cobro en ARS se **liquida con una transacción real en Stellar** en la moneda del comercio (USDC/XLM). Sin esto, el comercio nunca recibe dólares. | [`stellar.service.ts`](api/src/services/stellar.service.ts) |
+| **Off-ramp USDC → ARS** | **Stellar tx firmada (no custodial)** | El comercio firma con su wallet una **transacción Stellar** que envía USDC a BlindPay, que acredita pesos en su CBU/CVU. La pata on-chain es la transacción Stellar. | [`blindpay.service.ts`](api/src/services/blindpay.service.ts) · [`/offramp`](frontend/app/offramp/page.tsx) |
+| **On/off-ramp dólar ↔ peso (anchor)** | **SEP-1 / SEP-10 / SEP-24** | Descubre el anchor por `stellar.toml`, autentica (challenge firmado → JWT) y abre el flujo interactivo de ramp. Agnóstico: Anclap (AR) o anchor de referencia SDF (testnet). | [`anchor.service.ts`](api/src/services/anchor.service.ts) |
+| **Pago con wallet / split** | **Horizon · build → sign → submit** | Para POS/pagos compartidos, el backend arma una **tx Stellar sin firmar**, el pagador la firma con Freighter/xBull y se transmite a Horizon. | [`stellar-tx.controller.ts`](api/src/controllers/stellar-tx.controller.ts) |
+| **QR de pago para wallets** | **SEP-7** | URI `web+stellar:pay` interoperable para cualquier wallet Stellar. | [`qr.service.ts`](api/src/services/qr.service.ts) |
+| **Tasa de cambio entre activos** | **Horizon `/paths`** | Tasa real desde el DEX de Stellar para la conversión on-chain. | [`conversion.service.ts`](api/src/services/conversion.service.ts) |
 
-El flujo SEP-10 → SEP-24 está **validado end-to-end** contra el anchor de referencia de Stellar en testnet (autenticación + depósito interactivo devuelven token y URL hosted reales).
+**Validado end-to-end:** el flujo SEP-1 → SEP-10 → SEP-24 fue probado contra el anchor de referencia de Stellar en testnet (devuelve token y URL hosted reales), y el off-ramp con BlindPay devuelve **cotizaciones reales** USDC→ARS contra su sandbox sobre Stellar. La liquidación de cobros produce **transacciones reales** con su hash verificable en Stellar Expert.
+
+> El rail local también es real, no un mock: el QR de Transferencias 3.0 es **EMVCo** válido (TLV + checksum CRC16-CCITT, validado contra el vector estándar), con CVU recaudador.
+
+---
+
+## Los 4 flujos (qué construimos)
+
+| # | Flujo | Pantalla | Qué hace | Stellar |
+|---|-------|----------|----------|---------|
+| 1 | **Cobro en ARS** | [`/cobrar-ars`](frontend/app/cobrar-ars) | QR interoperable Transferencias 3.0 → acreditación Coelsa → **liquidación on-chain** | ✅ settlement real |
+| 2 | **Cobro compartido (POS)** | [`/pos`](frontend/app/pos) | Dividir una cuenta entre N personas; cada uno paga su parte con su wallet | ✅ tx firmada por pagador |
+| 3 | **Off-ramp USDC → ARS** | [`/offramp`](frontend/app/offramp) | Pasar dólares on-chain a pesos en un CBU/CVU (BlindPay; BR/CO en roadmap) | ✅ tx Stellar firmada |
+| 4 | **Rampa dólar (anchor)** | [`/ramp`](frontend/app/ramp) | On/off-ramp dólar ↔ peso con un anchor de Stellar | ✅ SEP-1/10/24 |
+
+Y el **panel del comercio** ([`/dashboard`](frontend/app/dashboard)): balance en USDC con equivalente en ARS (cotización oficial **BCRA** en vivo) + timeline de movimientos.
+
+Detalle completo de cada flujo en **[docs/FLUJOS.md](docs/FLUJOS.md)**.
 
 ---
 
@@ -59,107 +86,118 @@ El flujo SEP-10 → SEP-24 está **validado end-to-end** contra el anchor de ref
 
 | Capa | Tecnología |
 |------|-----------|
-| Frontend | Next.js + React 19 + Tailwind + Framer Motion |
-| Backend | Express + TypeScript |
+| Frontend | Next.js 16 + React 19 + Tailwind v4 + Framer Motion |
+| Backend | Express + TypeScript (serverless en Vercel) |
 | Blockchain | `@stellar/stellar-sdk` + Horizon (testnet/mainnet) |
 | Anchor | SEP-1 / SEP-10 / SEP-24 (Anclap · anchor de referencia SDF) |
-| Rail local | Transferencias 3.0 (BCRA) · QR interoperable EMVCo · Coelsa |
-| Wallets | Freighter, xBull, Albedo, LOBSTR |
-| Persistencia | Prisma + PostgreSQL |
-
----
-
-## Estructura
-
-```
-passpay/
-├── api/                                  # Backend Express + TypeScript
-│   └── src/
-│       ├── services/
-│       │   ├── anchor.service.ts         # SEP-1/10/24 — on/off-ramp
-│       │   ├── transferencias3.service.ts# Transferencias 3.0 + EMVCo QR
-│       │   ├── stellar.service.ts        # settlement on-chain (path payment)
-│       │   ├── conversion.service.ts     # tasas vía DEX Horizon
-│       │   └── qr.service.ts             # SEP-7
-│       ├── controllers/                  # anchor, transferencias3, splits, qr, payments
-│       ├── config/anchor.ts              # presets de anchor (reference / anclap)
-│       └── routes/
-└── frontend/                             # Next.js
-    └── app/
-        ├── page.tsx                      # Home
-        ├── pos/                          # Comercio — QR de cobro
-        ├── pay/[id]/                     # Pagador — wallet + moneda
-        ├── cobrar-ars/                   # Transferencias 3.0 — cobro en ARS
-        └── ramp/                         # Anchor SEP-24 — on/off-ramp dólar
-```
-
----
-
-## Correr el proyecto
-
-**Requisitos:** Node.js 18+, npm
-
-```bash
-# Backend
-cd api
-cp .env.example .env       # completar con claves Stellar testnet
-npm install
-npx prisma generate
-npm run dev                # http://localhost:3001
-
-# Frontend (nueva terminal)
-cd frontend
-npm install
-npm run dev                # http://localhost:3000
-```
-
-Variables clave (ver [`api/.env.example`](api/.env.example)): `PASSPAY_SECRET`, `MERCHANT_PUBLIC`, `ANCHOR_PROVIDER` (`reference` | `anclap`), `PASSPAY_CVU`, `T3_SETTLE_ASSET_CODE`.
+| Off-ramp fiat | BlindPay (USDC→ARS por rail `transfers_bitso`) |
+| Rail local | Transferencias 3.0 (BCRA) · QR EMVCo · Coelsa |
+| Cotización | API oficial del **BCRA** (ARS/USD) con cache + fallback |
+| Wallets | Stellar Wallets Kit (Freighter, xBull, Albedo, LOBSTR) |
+| Persistencia | Prisma + PostgreSQL (Supabase) |
+| Deploy | Vercel (2 proyectos: `passpay` + `passpay-api`) |
 
 ---
 
 ## API
 
-### Anchor (on/off-ramp · SEP-24)
 ```
-GET  /anchor/info               anchor activo + assets/fiat soportados
-POST /anchor/ramp               inicia depósito/retiro interactivo → { interactiveUrl, transactionId }
-GET  /anchor/transaction/:id    estado SEP-24 (polling)
-```
+# Salud
+GET  /health
 
-### Transferencias 3.0 (BCRA)
-```
-GET  /transferencias3/collector       CVU/alias del comercio recaudador
-POST /transferencias3/qr              genera QR interoperable EMVCo (ARS)
-POST /transferencias3/simulate-payment  acreditación Coelsa + liquidación on-chain
-```
+# Transferencias 3.0 (BCRA) — cobro en ARS
+GET  /transferencias3/collector          CVU/alias del comercio recaudador
+POST /transferencias3/qr                 genera QR interoperable EMVCo (ARS)
+POST /transferencias3/simulate-payment   acreditación Coelsa + liquidación on-chain
 
-### Splits / pagos
-```
-POST /splits                    crear un split
-GET  /splits/:id                estado
-GET  /splits/:id/intent         monto restante + datos de pago
-POST /splits/:id/pay            registrar un pago
-POST /splits/:id/release        disparar settlement
-GET  /splits/:id/qr             QR SEP-7
+# Anchor (on/off-ramp dólar · SEP-1/10/24)
+GET  /anchor/info                        anchor activo + assets/fiat soportados
+POST /anchor/ramp                        inicia depósito/retiro → { interactiveUrl, transactionId }
+GET  /anchor/transaction/:id             estado SEP-24 (polling)
+
+# Off-ramp USDC → ARS (BlindPay)
+GET  /blindpay/customers                 receivers KYC
+POST /blindpay/customers/:id/bank-accounts  adjunta cuenta ARS (CBU/CVU)
+POST /blindpay/quote                     cotización USDC → ARS (real)
+POST /blindpay/authorize                 XDR Stellar sin firmar
+POST /blindpay/payout                    ejecuta el payout con la tx firmada
+
+# Splits / pagos con wallet
+POST /splits                             crear un split
+GET  /splits/:id                         estado (polling)
+GET  /splits/:id/tx                      tx Stellar sin firmar (para la wallet)
+POST /splits/:id/tx/submit               transmite la tx firmada a Horizon
+GET  /splits/:id/qr                      QR SEP-7
+
+# Cotización y otros
+GET  /rates/ars-usd                      cotización oficial BCRA (cacheada)
+POST /mp/preference/:splitId             MercadoPago (checkout local)
+POST /webhooks/coelsa                    receptor de acreditaciones Coelsa (HMAC)
 ```
 
 ---
 
-## Demo
+## Correr local
 
-1. **Cobro en ARS** (`/cobrar-ars`): el comercio ingresa un monto → Passpay genera un QR interoperable Transferencias 3.0 (EMVCo) → "Simular pago" acredita los ARS vía Coelsa y **liquida on-chain en Stellar** (link a Stellar Expert).
-2. **Rampa dólar** (`/ramp`): retiro/depósito contra el anchor SEP-24 → se abre el flujo hosted del anchor → polling de estado hasta `completed`.
-3. **Split de pago** (`/pos` → `/pay/:id`): un grupo divide una cuenta, cada quien paga con su wallet/moneda y el comercio recibe su moneda configurada.
+**Requisitos:** Node.js 18+, npm.
+
+```bash
+# Backend
+cd api
+cp .env.example .env        # completar claves Stellar testnet + credenciales
+npm install
+npx prisma generate
+npm run dev                 # http://localhost:3001
+
+# Frontend (otra terminal)
+cd frontend
+npm install
+npm run dev                 # http://localhost:3000
+```
+
+Variables clave (ver [`api/.env.example`](api/.env.example)): `PASSPAY_SECRET`, `MERCHANT_PUBLIC`, `ANCHOR_PROVIDER` (`reference`|`anclap`), `PASSPAY_CVU`, `T3_SETTLE_ASSET_CODE`, `BLINDPAY_API_KEY`, `BLINDPAY_INSTANCE_ID`, `DATABASE_URL`.
+
+> Para crear un cliente AR de prueba en BlindPay (cuenta ARS + quote real): `node api/scripts/seed-blindpay-ar.mjs`.
+
+---
+
+## Deploy (Vercel)
+
+Monorepo desplegado como **dos proyectos** con auto-deploy desde GitHub:
+
+- **`passpay`** → `frontend/` (Next.js) → https://passpay-one.vercel.app
+- **`passpay-api`** → `api/` (Express serverless) → https://passpay-api.vercel.app
+
+El frontend apunta al backend vía `NEXT_PUBLIC_API_URL`. Pasos detallados en [docs/HANDOFF.md](docs/HANDOFF.md).
+
+---
+
+## Estado: real vs pendiente
+
+| Pieza | Estado |
+|-------|--------|
+| QR EMVCo Transferencias 3.0 (CRC16 validado) | ✅ Real |
+| Liquidación on-chain en Stellar (path payment) | ✅ Real (tx + hash en Stellar Expert) |
+| Off-ramp BlindPay — cotización USDC→ARS | ✅ Real (sandbox) |
+| Anchor SEP-1/10/24 | ✅ Validado en testnet |
+| Cotización ARS/USD | ✅ API oficial del BCRA |
+| Acreditación Coelsa | 🟡 Simulada (falta webhook bancario real) |
+| Persistencia (splits, payouts) | 🟡 Prisma/Supabase listo; instancia a reactivar |
+| Off-ramp BR/COP (Abroad) | 🔜 Roadmap (onboarding de partner) |
 
 ---
 
 ## Roadmap
 
-- [x] Path Payment real vía Stellar DEX (Horizon)
+- [x] Liquidación on-chain real vía Stellar (`payment` / `pathPaymentStrictReceive`)
 - [x] Anchor SEP-10 + SEP-24 (on/off-ramp), validado en testnet
-- [x] Transferencias 3.0 — QR interoperable EMVCo + acreditación + settlement on-chain
+- [x] Transferencias 3.0 — QR EMVCo + acreditación + settlement on-chain
+- [x] Off-ramp USDC → ARS no custodial (BlindPay) con tx Stellar firmada
+- [x] Cotización ARS/USD oficial del BCRA
+- [x] Deploy en producción (Vercel)
 - [ ] Anclap producción (credenciales ARS ↔ USDC)
 - [ ] Webhook bancario real (Coelsa) en lugar de la simulación
+- [ ] Off-ramp Brasil (PIX) / Colombia (PSE) vía Abroad
 - [ ] Trustless Work escrow (Soroban) para cobros con liberación condicionada
 
 ---
