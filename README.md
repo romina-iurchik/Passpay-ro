@@ -65,6 +65,21 @@ Passpay es esa capa. El comercio configura su moneda de liquidación (USDC/XLM) 
 
 > El rail local también es real, no un mock: el QR de Transferencias 3.0 es **EMVCo** válido (TLV + checksum CRC16-CCITT, validado contra el vector estándar), con CVU recaudador.
 
+### 🔎 Pruebas on-chain (Stellar Testnet — verificables en Stellar Expert)
+
+Cada cobro liquidado genera una **transacción real en Stellar**. Estas son verificables públicamente:
+
+| Qué | Verificar en Stellar Expert |
+|---|---|
+| **Liquidación de un cobro** (payment 101.25 XLM) | [`4299cea1…e3c4`](https://stellar.expert/explorer/testnet/tx/4299cea10ac10e518c50ce97ca1b25c2d0825f937dff46bb32546115bc91e3c4) |
+| Otras liquidaciones (mismo flujo) | [`a8f4b6ec…`](https://stellar.expert/explorer/testnet/tx/a8f4b6ecb5cc0d8d0498ccc2eb001496e4f60c032ac10f59f628d34007e29b0b) · [`ba32dd71…`](https://stellar.expert/explorer/testnet/tx/ba32dd71a09d217f67d06ae95ae961b1fcb77e95af3c6c8fbe4fcf5ce5f63465) |
+| **Cuenta de tesorería** (Passpay — firma las liquidaciones) | [`GAPIT4QU…MCIO`](https://stellar.expert/explorer/testnet/account/GAPIT4QUIFGUPC2BKS72J75Q455KUEBHWQXFJIOBFFKSANMRL2LUMCIO) |
+| **Cuenta del comercio** (recibe los dólares on-chain) | [`GA4SU5RC…2L64`](https://stellar.expert/explorer/testnet/account/GA4SU5RCI4NIBR3LW3OHCE4QDXTAVRXXGGXDSCAD2GKVSIHLNN3D2L64) |
+| **Asset USDB del off-ramp** (BlindPay, sobre Stellar) | [`GCQSSIMO…67NX`](https://stellar.expert/explorer/testnet/account/GCQSSIMOW5OCGULZATDXKU5MOJBOMFX6G65X6CXZDQ7AIB3SKFUZ67NX) |
+| **Anchor SEP-24** (descubrimiento SEP-1) | [stellar.toml](https://testanchor.stellar.org/.well-known/stellar.toml) |
+
+> Reproducible en vivo: `POST https://passpay-api.vercel.app/transferencias3/simulate-payment` con `{ "amountArs": 15000, "reference": "..." }` devuelve el `stellarTxHash` y su link a Stellar Expert.
+
 ---
 
 ## Los 4 flujos (qué construimos)

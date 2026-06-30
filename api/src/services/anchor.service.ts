@@ -151,23 +151,31 @@ export async function startInteractive(
   const account = rampKeypair().publicKey();
 
   const endpoint = `${info.transferServerSep24}/transactions/${direction}/interactive`;
-  const body: Record<string, string> = {
-    asset_code: info.assetCode,
-    account,
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${jwt}`,
   };
-  if (amount) body.amount = amount;
+  const post = (amt?: string) => {
+    const body: Record<string, string> = { asset_code: info.assetCode, account };
+    if (amt) body.amount = amt;
+    return fetch(endpoint, { method: "POST", headers, body: JSON.stringify(body) });
+  };
 
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${jwt}`,
-    },
-    body: JSON.stringify(body),
-  });
+  let res = await post(amount);
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new Error(`SEP-24 ${direction} falló: ${res.status} ${detail}`);
+    // Los anchors de testnet limitan el monto por asset (ej. USDC máx 100).
+    // Si lo excedimos, reintentamos clampeando al máximo que indica el error.
+    const max = detail.match(/maximum limit:\s*([\d.]+)/i)?.[1];
+    if (max && amount) {
+      res = await post(max);
+      if (!res.ok) {
+        const detail2 = await res.text().catch(() => "");
+        throw new Error(`SEP-24 ${direction} falló: ${res.status} ${detail2}`);
+      }
+    } else {
+      throw new Error(`SEP-24 ${direction} falló: ${res.status} ${detail}`);
+    }
   }
   const ramp = (await res.json()) as InteractiveRamp;
   return { info, ramp, account };
