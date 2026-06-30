@@ -29,7 +29,7 @@ async function cap(page, title, sub = "") {
       el = document.createElement("div");
       el.id = "pp-cap";
       el.style.cssText =
-        "position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,#5B4BF5,#2DD4BF);color:#fff;font:600 15px/1.35 system-ui,sans-serif;padding:10px 16px;text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.45)";
+        "position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,#5B4BF5,#2DD4BF);color:#fff;font:700 17px/1.3 system-ui,sans-serif;padding:11px 16px;text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.45)";
       document.body.appendChild(el);
     }
     el.innerHTML = title + (sub ? `<div style="font-weight:400;font-size:12px;opacity:.92;margin-top:3px">${sub}</div>` : "");
