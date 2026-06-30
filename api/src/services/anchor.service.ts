@@ -161,14 +161,29 @@ export async function startInteractive(
     return fetch(endpoint, { method: "POST", headers, body: JSON.stringify(body) });
   };
 
-  let res = await post(amount);
+  // Los anchors limitan el monto por asset (SEP-24 /info → max_amount; el de testnet
+  // es muy chico, ej. 10). Clampeamos al máximo declarado antes de enviar.
+  let amt = amount;
+  if (amt) {
+    try {
+      const infoRes = await fetch(`${info.transferServerSep24}/info`);
+      if (infoRes.ok) {
+        const sep24: any = await infoRes.json();
+        const max = sep24?.[direction]?.[info.assetCode]?.max_amount;
+        if (typeof max === "number" && parseFloat(amt) > max) amt = String(max);
+      }
+    } catch {
+      /* si /info no responde, seguimos: el fallback sin monto cubre el caso */
+    }
+  }
+
+  let res = await post(amt);
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    // Los anchors de testnet limitan el monto por asset (ej. USDC máx 100).
-    // Si lo excedimos, reintentamos clampeando al máximo que indica el error.
-    const max = detail.match(/maximum limit:\s*([\d.]+)/i)?.[1];
-    if (max && amount) {
-      res = await post(max);
+    // Fallback robusto: reintentar SIN monto. En SEP-24 el monto es opcional y el
+    // flujo hosted del anchor lo pide igual, así que la rampa siempre abre.
+    if (amt) {
+      res = await post(undefined);
       if (!res.ok) {
         const detail2 = await res.text().catch(() => "");
         throw new Error(`SEP-24 ${direction} falló: ${res.status} ${detail2}`);
