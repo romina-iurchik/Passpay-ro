@@ -10,6 +10,7 @@ import abroadRouter from "./routes/abroad.routes";
 import blindpayRouter from "./routes/blindpay.routes";
 import mpRouter from "./routes/mp.routes";
 import webhooksRouter from "./routes/webhooks.routes";
+import ratesRouter from "./routes/rates.routes";
 
 
 
@@ -23,6 +24,7 @@ export function createApp() {
   app.use("/qr", qrRouter);
   app.use("/anchor", anchorRouter);
   app.use("/transferencias3", transferencias3Router);
+  app.use("/rates", ratesRouter);
   app.use("/webhooks", coelsaRouter);
   app.use("/abroad", abroadRouter);
   app.use("/blindpay", blindpayRouter);

@@ -151,23 +151,46 @@ export async function startInteractive(
   const account = rampKeypair().publicKey();
 
   const endpoint = `${info.transferServerSep24}/transactions/${direction}/interactive`;
-  const body: Record<string, string> = {
-    asset_code: info.assetCode,
-    account,
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${jwt}`,
   };
-  if (amount) body.amount = amount;
+  const post = (amt?: string) => {
+    const body: Record<string, string> = { asset_code: info.assetCode, account };
+    if (amt) body.amount = amt;
+    return fetch(endpoint, { method: "POST", headers, body: JSON.stringify(body) });
+  };
 
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${jwt}`,
-    },
-    body: JSON.stringify(body),
-  });
+  // Los anchors limitan el monto por asset (SEP-24 /info → max_amount; el de testnet
+  // es muy chico, ej. 10). Clampeamos al máximo declarado antes de enviar.
+  let amt = amount;
+  if (amt) {
+    try {
+      const infoRes = await fetch(`${info.transferServerSep24}/info`);
+      if (infoRes.ok) {
+        const sep24: any = await infoRes.json();
+        const max = sep24?.[direction]?.[info.assetCode]?.max_amount;
+        if (typeof max === "number" && parseFloat(amt) > max) amt = String(max);
+      }
+    } catch {
+      /* si /info no responde, seguimos: el fallback sin monto cubre el caso */
+    }
+  }
+
+  let res = await post(amt);
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new Error(`SEP-24 ${direction} falló: ${res.status} ${detail}`);
+    // Fallback robusto: reintentar SIN monto. En SEP-24 el monto es opcional y el
+    // flujo hosted del anchor lo pide igual, así que la rampa siempre abre.
+    if (amt) {
+      res = await post(undefined);
+      if (!res.ok) {
+        const detail2 = await res.text().catch(() => "");
+        throw new Error(`SEP-24 ${direction} falló: ${res.status} ${detail2}`);
+      }
+    } else {
+      throw new Error(`SEP-24 ${direction} falló: ${res.status} ${detail}`);
+    }
   }
   const ramp = (await res.json()) as InteractiveRamp;
   return { info, ramp, account };

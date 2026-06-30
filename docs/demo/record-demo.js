@@ -3,7 +3,7 @@
 const { chromium } = require("playwright");
 const path = require("path");
 
-const BASE = "http://localhost:3000";
+const BASE = "https://passpay-one.vercel.app";
 const OUT = path.join(__dirname, "videos");
 const VALID_CBU = "0170099220000067797370"; // Banco Galicia, checksum válido
 
@@ -16,22 +16,25 @@ async function hideDevOverlay(page) {
   }).catch(() => {});
 }
 
-// Banner/subtítulo fijo arriba (paleta indigo→teal de la portada)
+// cap() dibuja un banner sincronizado (horneado en el video) Y registra una marca
+// de tiempo (para colocar los SFX en post). Banner = sync perfecto con el contenido.
+const MARKS = [];
+let T0 = 0;
 async function cap(page, title, sub = "") {
   await hideDevOverlay(page);
+  MARKS.push({ t: Math.max(0, Date.now() - T0), title, sub });
   await page.evaluate(({ title, sub }) => {
     let el = document.getElementById("pp-cap");
     if (!el) {
       el = document.createElement("div");
       el.id = "pp-cap";
       el.style.cssText =
-        "position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,#5B4BF5,#2DD4BF);color:#fff;font:600 14px/1.35 system-ui,sans-serif;padding:9px 14px;text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.45)";
+        "position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,#5B4BF5,#2DD4BF);color:#fff;font:700 17px/1.3 system-ui,sans-serif;padding:11px 16px;text-align:center;box-shadow:0 3px 12px rgba(0,0,0,.45)";
       document.body.appendChild(el);
     }
-    el.innerHTML = title + (sub ? `<div style="font-weight:400;font-size:11px;opacity:.92;margin-top:2px">${sub}</div>` : "");
+    el.innerHTML = title + (sub ? `<div style="font-weight:400;font-size:12px;opacity:.92;margin-top:3px">${sub}</div>` : "");
   }, { title, sub }).catch(() => {});
 }
-
 async function clearCap(page) {
   await page.evaluate(() => document.getElementById("pp-cap")?.remove()).catch(() => {});
 }
@@ -74,6 +77,7 @@ async function scrollTo(page, y) {
 
   const page = await context.newPage();
   page.setDefaultTimeout(20000);
+  T0 = Date.now(); // referencia para las marcas de subtítulos
 
   try {
     // ───────── 0 · Home (la portada se antepone luego con ffmpeg) ─────────
@@ -129,20 +133,7 @@ async function scrollTo(page, y) {
     await sleep(page, 3300);
 
     // ───────── 2 · Cobro compartido — POS / Split ─────────
-    // La DB (Supabase) no es alcanzable desde esta red, así que stubeamos la creación
-    // del split: el cálculo del split y el QR son frontend real, solo la persistencia va mock.
-    await context.route("**/splits**", (route) => {
-      const req = route.request();
-      const p = req.url().split("?")[0];
-      if (req.method() === "POST" && /\/splits$/.test(p)) {
-        return route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ id: "pp-demo-split-001", status: "PENDING" }) });
-      }
-      if (req.method() === "GET" && /\/splits\/[^/]+$/.test(p)) {
-        return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ id: "pp-demo-split-001", status: "PENDING", totalAmount: 20000, settlementAsset: { code: "XLM" } }) });
-      }
-      return route.continue();
-    });
-
+    // Contra el sitio deployado la DB (Supabase) está activa: el split se crea de verdad.
     await page.goto(BASE + "/pos", { waitUntil: "networkidle" });
     await cap(page, "2 · Cobro compartido — POS / Split", "Dividir una cuenta entre varias personas");
     await sleep(page, 1400);
@@ -177,11 +168,11 @@ async function scrollTo(page, y) {
     const cbuInput = page.locator('input[placeholder="22 dígitos"]');
     if (await cbuInput.count()) {
       await cap(page, "3 · Cuenta ARS de destino (CBU)", "Rail transfers_bitso → ARS");
+      // el front ya pre-carga un CBU válido único; solo creamos la cuenta
       await cbuInput.first().click();
-      await cbuInput.first().fill(VALID_CBU);
-      await sleep(page, 1100);
+      await sleep(page, 1000);
       await safeClickByText(page, /Crear cuenta ARS/i);
-      await sleep(page, 2800);
+      await sleep(page, 3500);
     }
 
     await cap(page, "3 · Cotizando contra BlindPay (en vivo)", "request_amount en centavos · moneda por el rail");
@@ -196,11 +187,63 @@ async function scrollTo(page, y) {
       await sleep(page, 2400);
     }
 
-    // ───────── 5 · Rampa anchor SEP-24 ─────────
+    // ───────── 4 · Rampa anchor SEP-24 ─────────
     await page.goto(BASE + "/ramp", { waitUntil: "networkidle" });
-    await sleep(page, 2400);
-    await cap(page, "4 · Rampa dólar — Anchor SEP-24", "Descubrimiento SEP-1 · auth SEP-10 · on/off-ramp SEP-24");
-    await sleep(page, 3600);
+    await sleep(page, 2200);
+    await cap(page, "4 · Rampa dólar — Anchor SEP-24", "Descubrimiento SEP-1 · auth SEP-10");
+    // monto chico (límite testnet: 10) y disparar el retiro
+    const rampAmount = page.locator('input[inputmode="decimal"]');
+    if (await rampAmount.count()) {
+      await rampAmount.first().click();
+      await rampAmount.first().fill("10");
+      await sleep(page, 1100);
+    }
+    await cap(page, "4 · Se abre el flujo SEP-24 del anchor", "Al retirar, el anchor abre su ventana hosted (KYC + transferencia)");
+    // Disparar el retiro: el anchor abre el flujo en un popup → capturamos su URL
+    let sep24Url = null;
+    try {
+      const [popup] = await Promise.all([
+        page.waitForEvent("popup", { timeout: 18000 }),
+        page.getByRole("button", { name: /Retirar/i }).first().click(),
+      ]);
+      await popup.waitForLoadState("domcontentloaded").catch(() => {});
+      await popup.waitForTimeout(800);
+      sep24Url = popup.url();
+      await popup.close().catch(() => {});
+    } catch {}
+    // mostrar el estado de la operación en la pantalla de Passpay
+    await page.getByText(/Operaci[oó]n|pending|transfer/i).first().waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
+    await sleep(page, 2800);
+    // mostrar el FORMULARIO de retiro SEP-24. Pedimos una operación FRESCA (estado nuevo →
+    // muestra el formulario AMOUNT/NAME/…, no la pantalla de info con guiones) y esperamos
+    // a que aparezcan los campos. Reintentos por si el anchor de testnet glitchea.
+    let shownForm = false;
+    for (let attempt = 0; attempt < 3 && !shownForm; attempt++) {
+      const freshUrl = await page.evaluate(async () => {
+        try {
+          const r = await fetch("https://passpay-api.vercel.app/anchor/ramp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ direction: "withdraw", amount: "10" }),
+          });
+          const d = await r.json();
+          return d.interactiveUrl || null;
+        } catch {
+          return null;
+        }
+      });
+      if (!freshUrl) continue;
+      await page.goto(freshUrl, { waitUntil: "domcontentloaded" }).catch(() => {});
+      shownForm = await page.getByText(/first name/i).first().waitFor({ state: "visible", timeout: 9000 }).then(() => true).catch(() => false);
+    }
+    if (shownForm) {
+      await sleep(page, 1000);
+      await cap(page, "4 · SEP-24 — formulario de retiro del anchor (Stellar)", "El usuario completa monto y datos para recibir en su cuenta");
+      await sleep(page, 4500);
+    } else {
+      await cap(page, "4 · Rampa SEP-24 lista", "On/off-ramp dólar ↔ peso con un anchor real de Stellar");
+      await sleep(page, 2500);
+    }
 
     // ───────── cierre ─────────
     await page.goto(BASE + "/", { waitUntil: "networkidle" });
@@ -212,10 +255,13 @@ async function scrollTo(page, y) {
   } catch (e) {
     console.error("ERROR_DURING_RECORDING:", e.message);
   } finally {
+    const totalMs = Date.now() - T0;
     await context.close();
     const video = page.video();
     const vpath = video ? await video.path() : null;
     await browser.close();
     console.log("VIDEO_PATH=" + vpath);
+    console.log("TOTAL_MS=" + totalMs);
+    console.log("MARKS=" + JSON.stringify(MARKS));
   }
 })();

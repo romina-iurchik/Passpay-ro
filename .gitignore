@@ -4,3 +4,12 @@ _env
 api/.env
 frontend/.env.local
 *.env
+
+# Vercel CLI
+.vercel
+
+# Agent skills (local AI tooling, not app code)
+.agents/
+skills-lock.json
+# música de fondo (copyright — no versionar)
+docs/demo/*.mp3
