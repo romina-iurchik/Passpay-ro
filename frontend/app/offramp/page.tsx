@@ -45,9 +45,10 @@ export default function OfframpPage() {
   const [bankAccountId, setBankAccountId] = useState('');
   const [usdAmount, setUsdAmount] = useState('50');
 
-  // crear cuenta ARS
+  // crear cuenta ARS — pre-cargamos un CBU de prueba válido (Banco Galicia, checksum OK)
+  const DEMO_CBU = '0170099220000067797370';
   const [showNewAccount, setShowNewAccount] = useState(false);
-  const [newCbu, setNewCbu] = useState('');
+  const [newCbu, setNewCbu] = useState(DEMO_CBU);
   const [newCbuType, setNewCbuType] = useState<'CBU' | 'CVU' | 'ALIAS'>('CBU');
 
   const [quote, setQuote] = useState<Quote | null>(null);
@@ -97,7 +98,12 @@ export default function OfframpPage() {
   useEffect(() => { if (customerId) loadBankAccounts(customerId); }, [customerId, loadBankAccounts]);
 
   async function handleCreateAccount() {
-    if (!/^\d{22}$/.test(newCbu) && newCbuType !== 'ALIAS') {
+    if (newCbuType === 'ALIAS') {
+      // BlindPay valida el formato del alias; exigimos un alias plausible para no romper el flujo.
+      if (!/^[a-zA-Z0-9][a-zA-Z0-9.\-]{5,19}$/.test(newCbu) || !/[.\-]/.test(newCbu)) {
+        return setError('El alias debe tener 6–20 caracteres e incluir un punto, ej: mi.alias.mp');
+      }
+    } else if (!/^\d{22}$/.test(newCbu)) {
       return setError('El CBU o CVU debe tener 22 dígitos');
     }
     const customer = customers.find((c) => c.id === customerId);
@@ -310,7 +316,7 @@ export default function OfframpPage() {
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3 p-3 rounded-xl bg-slate-800/70 border border-slate-700 space-y-2">
                     <div className="flex gap-2">
                       {(['CBU', 'CVU', 'ALIAS'] as const).map((t) => (
-                        <button key={t} onClick={() => setNewCbuType(t)}
+                        <button key={t} onClick={() => { setNewCbuType(t); setNewCbu(t === 'ALIAS' ? '' : DEMO_CBU); setError(null); }}
                           className={`flex-1 py-1.5 rounded-lg text-xs font-semibold ${newCbuType === t ? 'bg-[#5B4BF5] text-white' : 'bg-slate-700 text-slate-300'}`}>
                           {t}
                         </button>
